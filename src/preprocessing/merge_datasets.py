@@ -55,42 +55,73 @@ class DatasetMerger:
   def exctract_year_from_filename(self, filename: str) -> int:
     return int(filename.split('datatran')[-1].split('.')[0])
   
-  def process_dataset(self, df: pd.DataFrame, year:int) -> pd.DataFrame:
+  def convert_numeric(self, series: pd.Series) -> pd.Series:
+    if series.dtype == 'object':
+        series = series.astype(str).str.strip()
+        series = series.str.replace(',','.')
+    return pd.to_numeric(series, errors='coerce')
+  
+  def process_dataset(self, df: pd.DataFrame, year:int, include_extra_columns: bool = False) -> pd.DataFrame:
     if 'ano' not in df.columns:
       df['ano'] = year
-      
-    for col in self.extra_columns:
-      if col not in df.columns:
-        df[col] = None
-        
-    for col in self.base_columns:
-      if col not in df.columns:
-        logger.warning(f"Coluna {col} não encontrada no dataset de {year}")
-        df[col] = None
-        
-    numeric_columns = ['br', 'km', 'pessoas', 'mortos', 'feridos_leves','feridos_graves', 'ilesos', 'ignorados', 'feridos', 'veiculos']
     
-    for col in numeric_columns:
-      if col in df.columns:
-        df[col] = pd.to_numeric(df[col], errors='coerce')
+    columns_to_process = self.base_columns + (self.extra_columns if include_extra_columns else [])
+
+    for col in columns_to_process:
+      if col not in df.columns:
+        df[col] = None
         
-    if 'latitude' in df.columns and 'longitude' in df.columns:
+    numeric_columns = {
+            'br': 'Int64',
+            'km': 'float64',
+            'pessoas': 'Int64',
+            'mortos': 'Int64',
+            'feridos_leves': 'Int64',
+            'feridos_graves': 'Int64',
+            'ilesos': 'Int64',
+            'ignorados': 'Int64',
+            'feridos': 'Int64',
+            'veiculos': 'Int64'
+        }
+    
+    for col, dtypes in numeric_columns.items():
+      if col in df.columns:
+        df[col] = self.convert_numeric(df[col])
+        if dtypes == 'Int64':
+          df[col] = df[col].astype('Int64')
+        
+    if include_extra_columns and 'latitude' in df.columns and 'longitude' in df.columns:
       df['latitude'] = pd.to_numeric(df['latitude'].str.replace(',','.'), errors='coerce')
       df['longitude'] = pd.to_numeric(df['longitude'].str.replace(',','.'), errors='coerce')
-      
+
     return df
   
-  def merge_datasets(self) -> pd.DataFrame:
+  def merge_dataset_base(self, start_year: int = 2007, end_year: int = 2024) -> pd.DataFrame:
+    
+    return self._merge_datasets(start_year, end_year, include_extra_columns=False)
+  
+
+  def merge_dataset_complete(self, start_year: int = 2017, end_year: int = 2024) -> pd.DataFrame:
+    
+    return self._merge_datasets(start_year, end_year, include_extra_columns=True)
+
+  def _merge_datasets(self, start_year:int, end_year:int, include_extra_columns: bool) -> pd.DataFrame:
     dfs = []
     
-    csv_files = sorted([f for f in self.data_dir.glob('datatran*.csv')])
+    csv_files = sorted([
+      f for f in self.data_dir.glob('datatran*.csv')
+      if start_year <= self.exctract_year_from_filename(f.name) <= end_year  
+    ])
     
+    if not csv_files:
+      raise FileNotFoundError(f"Nenhum arquivo CSV encontrado para o periódo {start_year}-{end_year}")
+
     for file_path in csv_files:
       year = self.exctract_year_from_filename(file_path.name)
       logger.info(f"Processando dataset do ano {year}")
       
       df = self.read_csv_file(file_path)
-      df_processed = self.process_dataset(df, year)
+      df_processed = self.process_dataset(df, year, include_extra_columns)
       dfs.append(df_processed)
       
     merged_df = pd.concat(dfs, ignore_index=True)
@@ -98,6 +129,9 @@ class DatasetMerger:
     merged_df['data_inversa'] = pd.to_datetime(merged_df['data_inversa'], format="mixed")
     merged_df = merged_df.sort_values('data_inversa')
     
+    if not include_extra_columns:
+      merged_df = merged_df.drop(columns=self.extra_columns, errors="ignore")
+
     return merged_df
   
   def save_merged_dataset(self, df: pd.DataFrame, filename: str = "datatran_merged.csv"):
@@ -125,8 +159,12 @@ class DatasetMerger:
 def main():
   try:
     merger = DatasetMerger()
-    merged_df = merger.merge_datasets()
-    merger.save_merged_dataset(merged_df)
+    merged_df_base = merger.merge_dataset_base()
+    merger.save_merged_dataset(merged_df_base, "datatran_merged_base_2007_2024")
+
+    merged_def_complete = merger.merge_dataset_complete()
+    merger.save_merged_dataset(merged_def_complete, "datatran_merged_complete_2017_2024")
+
   except Exception as e:
     logger.error(f"Erro durante a unificação dos datasets: {str(e)}")
     raise
