@@ -1,0 +1,8 @@
+paths:
+  save_files: "./files/raw/"
+
+config:
+  download_files: True
+
+database:
+  detran: "https://www.gov.br/prf/pt-br/acesso-a-informacao/dados-abertos/dados-abertos-da-prf"

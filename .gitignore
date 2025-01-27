@@ -1,3 +1,19 @@
+## Do projeto
+files/**/*
+files/*
+files/**
+data/raw
+data/**
+data/**/*
+data/*/*
+data/raw/*
+dataset/**/*
+dataset/*
+dataset/
+**/__pycache__/**/*
+**/__pycache__/*
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
