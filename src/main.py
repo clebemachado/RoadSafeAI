@@ -1,11 +1,26 @@
-from config.config_project import ConfigProject
+import sys
+import logging
+
 from data_collection.collect_data import CollectData
 from data_collection.collect_data_detran import CollectDataDetran
+from preprocessing.merge_datasets import DatasetMerger
 
-import sys
-sys.path.append('src')
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
-config = ConfigProject()
+def main():
+    try:
+        collect_data : CollectData = CollectDataDetran()
+        collect_data.execute() # Colocar como false caso já tenha dados
+        
+        dataset_merge: DatasetMerger = DatasetMerger();
+        dataset_merge.execute()
+    except Exception as e:
+        logger.error(f"Erro durante a unificação dos datasets: {str(e)}")
 
-collect_data : CollectData = CollectDataDetran()
-collect_data.execute(force_execute=config.get("config.download_files")) # Colocar como false caso já tenha dados
+if __name__ == "__main__":
+    main()
+    

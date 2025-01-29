@@ -1,8 +1,9 @@
 paths:
   save_files: "./files/raw/"
+  output_files: "./files/processed/"
 
 config:
-  download_files: True
+  download_files: False
 
 database:
   detran: "https://www.gov.br/prf/pt-br/acesso-a-informacao/dados-abertos/dados-abertos-da-prf"

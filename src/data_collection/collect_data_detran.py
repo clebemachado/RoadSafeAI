@@ -3,6 +3,7 @@ from config.config_project import ConfigProject
 from data_collection.collect_data import CollectData
 from pathlib import Path
 import shutil
+import logging
 
 
 from data_collection.file_download import FileDownloader
@@ -21,6 +22,13 @@ PATH_SAVE_FILE_YAML = "paths.save_files"
 URL_REPLACE = "https://drive.usercontent.google.com/u/0/uc?id=ID_FILE&export=download"
 
 
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 class CollectDataDetran(CollectData):
     
     def __init__(self):
@@ -29,8 +37,8 @@ class CollectDataDetran(CollectData):
         self.root_path = Path(__file__).parent.parent.parent
         self.type_file = ".csv"
         
-    def execute(self, force_download=False):
-        
+    def execute(self):
+                
         """
         Método principal para executar o fluxo de coleta e processamento de dados. Este método:
         1. Obtém os dados do Detran através de `__getDataFrame`.
@@ -45,21 +53,21 @@ class CollectDataDetran(CollectData):
             Nenhum.
         """
         
-        if self.__verify_if_file_folder_exist(force_download):
-            print(f"Folder {self.root_path.stem}{MESSAGE_ERROR_FILE_EXIST}")
+        if self.__verify_if_file_folder_exist(self.config.get("config.download_files")):
+            logging.warning(f"Folder {self.root_path.stem}{MESSAGE_ERROR_FILE_EXIST}")
             return
 
-        print("Iniciando coleta de dados")
+        logging.info("Iniciando coleta de dados")
         
         df = self.__getDataFrame()
         self.__clean_dataframe(df)
         
-        df = self.__remove_rows_with_data_repeat(df) # Cuidado aqui
+        #f = self.__remove_rows_with_data_repeat(df) # Cuidado aqui
         
         self.__generate_column_name_file(df)
         self.__download_and_save_files(df)
         
-        print("finalizando coleta de dados")
+        logging.info("finalizando coleta de dados")
     
     
     def __verify_if_file_folder_exist(self, force_download):
@@ -186,11 +194,26 @@ class CollectDataDetran(CollectData):
         Retorno:
             Nenhum.
         """
+        errors = []
+        
         for index, row in df.iterrows():
             
             url = row[COLUMN_URL]
             file_name = row[COLUMN_FILE_NAME]  
+            year = row[COLUMN_YEAR]
+            
+            if("_agg_ocorrencia" not in file_name):
+                continue
+            
+            file_name_save = f"datatran{year}"
             
             # Todo: ver uma forma melhor de pegar o programa root ou como definir que antes de src é root
             download_folder = Path(__file__).parent.parent.parent / self.config.get(PATH_SAVE_FILE_YAML)
-            FileDownloader.download_and_save(url, file_name, self.type_file, download_folder)
+            file_is_save = FileDownloader.download_and_save(url, file_name_save, self.type_file, download_folder)
+            
+            if(not file_is_save):
+                errors.append(year)
+        
+        for y in errors:
+            logger.error(f"Dataset para o ano {y} não realizado.")
+                

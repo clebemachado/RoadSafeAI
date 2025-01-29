@@ -1,13 +1,17 @@
 import requests
 import os
 import zipfile
+import logging
 
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 class FileDownloader:
     @staticmethod
     def download_and_save(url: str, file_name: str, type: str = ".csv", download_folder: str = "files"):
-        
-        file_zip_path = file_name + ".zip"
         
         try:
             response = requests.get(url)
@@ -18,7 +22,7 @@ class FileDownloader:
                 extension = FileDownloader.get_extension(content_type)
                 
                 if not extension:
-                    print(f"Tipo de arquivo desconhecido: {content_type}")
+                    logger.info(f"Tipo de arquivo desconhecido: {content_type}")
                     return False
                 
                 file_name_with_extension = file_name + extension
@@ -27,7 +31,7 @@ class FileDownloader:
                 file_path = os.path.join(download_folder, file_name_with_extension)
                 
                 with open(file_path, 'wb') as f:
-                    print(f"Arquivo salvo em: {file_path}")
+                    logger.info(f"Arquivo salvo em: {file_path}")
                     f.write(response.content)
                 
                 FileDownloader.extract_if_file_is_zip(file_path)
@@ -36,7 +40,7 @@ class FileDownloader:
             else:
                 return False
         except Exception as e:
-            print(f"Erro ao baixar ou salvar o arquivo {file_name}: {e}")
+            logger.error(f"Erro ao baixar ou salvar o arquivo {file_name}: {e}")
             return False
     
     @staticmethod
@@ -57,7 +61,7 @@ class FileDownloader:
                         csv_path = file_path.replace('.zip', '.csv')
                         with(open(csv_path, "wb")) as csv_file:
                             csv_file.write(zip_file.read(file))
-                            print(f"CSV extraido para: {csv_path}")
+                            logger.info(f"CSV extraido para: {csv_path}")
             os.remove(file_path)
         else:
-            print("Erro: O arquivo baixado não é um ZIP válido.")
+            logger.error("Erro: O arquivo baixado não é um ZIP válido.")
