@@ -170,3 +170,4 @@ class DatasetMerger:
                 f.write(f"{key}: {value}\n")
             
         logger.info(f"Metadados salvos em {metadata_path}")
+        
