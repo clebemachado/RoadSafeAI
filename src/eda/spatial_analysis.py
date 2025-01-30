@@ -28,3 +28,5 @@ class SpatialAnalysis:
     def get_accident_density(self) -> pd.DataFrame:
         """Densidade de acidentes por trecho."""
         return self.df.groupby(["br","km"]).size().reset_index(name='acidentes')
+    
+    

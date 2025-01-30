@@ -72,3 +72,5 @@ class AccidentVisualizer:
         plt.xlabel(xlabel)
         plt.ylabel('Frequência')
         plt.tight_layout()
+        
+        
