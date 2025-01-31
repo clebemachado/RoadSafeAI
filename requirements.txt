@@ -1,5 +1,5 @@
 # Data manipulation and analysis
-pandas==2.2.0
+pandas==2.2.3
 numpy==1.26.3
 
 # Machine Learning
@@ -29,6 +29,7 @@ pytest==8.3.4
 python-dotenv==1.0.1
 pyyaml==6.0.2
 pip-upgrader
+unidecode
 
 # Necessários
 requests==2.32.3

@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import logging
+import unidecode
 
 logging.basicConfig(
     level=logging.INFO,
@@ -18,39 +19,34 @@ class DataCleaning:
         return df
     
     @staticmethod
-    def handle_missing_values(df: pd.DataFrame, strategy: str = 'median') -> pd.DataFrame:
-        """Trata valores ausentes no dataset."""
+    def handle_missing_values(df: pd.DataFrame, strategy: str = 'selective') -> pd.DataFrame:
+
+        initial_count = len(df)
         missing_values = df.isnull().sum().sum()
         logger.info(f"Valores ausentes antes do tratamento: {missing_values}")
+
+        # Criar cópia do DataFrame
+        df_treated = df.copy()
         
-        if strategy == 'drop':
-            df = df.dropna()
-        elif strategy == 'median':
-            for col in df.select_dtypes(include=[np.number]).columns:
-                df[col].fillna(df[col].median(), inplace=True)
-        elif strategy == 'mode':
-            for col in df.columns:
-                df[col].fillna(df[col].mode()[0], inplace=True)
+        # 1. Identificar linhas que têm nulos apenas em tipo_acidente
+        only_tipo_acidente_null = df_treated[
+            (df_treated['tipo_acidente'].isnull()) & 
+            (~df_treated.drop('tipo_acidente', axis=1).isnull().any(axis=1))
+        ]
         
-        missing_values_after = df.isnull().sum().sum()
-        logger.info(f"Valores ausentes após o tratamento: {missing_values_after}")
-        return df
-    
-    @staticmethod
-    def remove_outliers(df: pd.DataFrame, columns: list, threshold: float = 1.5) -> pd.DataFrame:
-        """Remove outliers com base no método do IQR (Interquartile Range)."""
-        initial_count = len(df)
-        for col in columns:
-            if col in df.select_dtypes(include=[np.number]).columns:
-                Q1 = df[col].quantile(0.25)
-                Q3 = df[col].quantile(0.75)
-                IQR = Q3 - Q1
-                lower_bound = Q1 - (IQR * threshold)
-                upper_bound = Q3 + (IQR * threshold)
-                df = df[(df[col] >= lower_bound) & (df[col] <= upper_bound)]
+        # 2. Preencher tipo_acidente como "Não informado" apenas nestas linhas
+        df_treated.loc[only_tipo_acidente_null.index, 'tipo_acidente'] = 'Não informado'
         
-        logger.info(f"Removidos {initial_count - len(df)} outliers das colunas {columns}.")
-        return df
+        # 3. Remover linhas que têm nulos em outros campos
+        df_treated = df_treated.dropna()
+        
+        # 4. Logging das informações do tratamento
+        logger.info(f"Linhas onde apenas tipo_acidente era nulo: {len(only_tipo_acidente_null)}")
+        logger.info(f"Registros no dataset original: {initial_count}")
+        logger.info(f"Registros após tratamento: {len(df_treated)}")
+        logger.info(f"Registros removidos: {initial_count - len(df_treated)}")
+        
+        return df_treated
     
     @staticmethod
     def standardize_column_names(df: pd.DataFrame) -> pd.DataFrame:
@@ -61,8 +57,6 @@ class DataCleaning:
     @staticmethod
     def normalize_categorical_columns(df: pd.DataFrame, columns: list) -> pd.DataFrame:
         """Normaliza colunas categóricas removendo acentos e espaços extras."""
-        import unidecode
-        
         for col in columns:
             if col in df.columns:
                 df[col] = df[col].astype(str).apply(lambda x: unidecode.unidecode(x.strip().lower()) if pd.notnull(x) else x)
@@ -74,6 +68,5 @@ class DataCleaning:
         df = DataCleaning.standardize_column_names(df)
         df = DataCleaning.remove_duplicates(df)
         df = DataCleaning.handle_missing_values(df)
-        df = DataCleaning.remove_outliers(df, ['km', 'pessoas', 'mortos', 'feridos_leves', 'feridos_graves', 'ilesos', 'veiculos'])
         df = DataCleaning.normalize_categorical_columns(df, ['causa_acidente', 'tipo_acidente', 'fase_dia', 'condicao_metereologica'])
         return df

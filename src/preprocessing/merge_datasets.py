@@ -38,13 +38,23 @@ class DatasetMerger:
         self._config_paths()
     
     
-    def execute(self):
-        merged_df_base = self._merge_datasets(start_year = 2007, end_year = 2024, include_extra_columns=False)
+    def execute(self) -> Dict[str, pd.DataFrame]:
+        """
+        Executa o merge dos datasets retornando tanto o dataset base quanto o completo.
+        
+        Returns:
+            Dict[str, pd.DataFrame]: Dicionário contendo 'base' e 'complete' DataFrames
+        """
+        merged_df_base = self._merge_datasets(start_year=2007, end_year=2024, include_extra_columns=False)
         self.save_merged_dataset(merged_df_base, "datatran_merged_base_2007_2024.csv")
         
+        merged_df_complete = self._merge_datasets(start_year=2017, end_year=2024, include_extra_columns=True)
+        self.save_merged_dataset(merged_df_complete, "datatran_merged_complete_2017_2024.csv")
         
-        merged_def_complete = self._merge_datasets(start_year = 2017, end_year = 2024, include_extra_columns=False)
-        self.save_merged_dataset(merged_def_complete, "datatran_merged_complete_2017_2024.csv")
+        return {
+            'base': merged_df_base,
+            'complete': merged_df_complete
+        }
         
     
     def _get_project_root(self) -> Path:
