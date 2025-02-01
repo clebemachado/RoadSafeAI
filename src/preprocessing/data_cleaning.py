@@ -19,28 +19,23 @@ class DataCleaning:
         return df
     
     @staticmethod
-    def handle_missing_values(df: pd.DataFrame, strategy: str = 'selective') -> pd.DataFrame:
+    def handle_missing_values(df: pd.DataFrame) -> pd.DataFrame:
 
         initial_count = len(df)
         missing_values = df.isnull().sum().sum()
         logger.info(f"Valores ausentes antes do tratamento: {missing_values}")
 
-        # Criar cópia do DataFrame
         df_treated = df.copy()
         
-        # 1. Identificar linhas que têm nulos apenas em tipo_acidente
         only_tipo_acidente_null = df_treated[
             (df_treated['tipo_acidente'].isnull()) & 
             (~df_treated.drop('tipo_acidente', axis=1).isnull().any(axis=1))
         ]
         
-        # 2. Preencher tipo_acidente como "Não informado" apenas nestas linhas
         df_treated.loc[only_tipo_acidente_null.index, 'tipo_acidente'] = 'Não informado'
         
-        # 3. Remover linhas que têm nulos em outros campos
         df_treated = df_treated.dropna()
         
-        # 4. Logging das informações do tratamento
         logger.info(f"Linhas onde apenas tipo_acidente era nulo: {len(only_tipo_acidente_null)}")
         logger.info(f"Registros no dataset original: {initial_count}")
         logger.info(f"Registros após tratamento: {len(df_treated)}")

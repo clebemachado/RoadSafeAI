@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 class FeatureEngineering:
     """
@@ -18,18 +19,15 @@ class FeatureEngineering:
     
     @staticmethod
     def categorize_severity(df: pd.DataFrame) -> pd.DataFrame:
-        """Cria uma categoria de severidade do acidente baseada no número de mortos e feridos."""
-        df['severidade'] = 'leve'
-        df.loc[df['feridos_graves'] > 0, 'severidade'] = 'grave'
-        df.loc[df['mortos'] > 0, 'severidade'] = 'fatal'
-        return df
-    
-    @staticmethod
-    def create_binary_features(df: pd.DataFrame) -> pd.DataFrame:
-        """Cria variáveis binárias para condições meteorológicas e tipo de pista."""
-        df['chuva'] = df['condicao_metereologica'].str.contains('Chuva', na=False).astype(int)
-        df['neblina_nevoeiro'] = df['condicao_metereologica'].str.contains('Nevoeiro|Neblina', na=False).astype(int)
-        df['pista_dupla'] = df['tipo_pista'].str.contains('Dupla', na=False).astype(int)
+        conditions = [
+            (df['mortos'] > 0),
+            (df['feridos_graves'] > 0),
+            (df['feridos_leves'] > 0),
+            (df['ilesos'] > 0)
+        ]
+        choices = ['fatal', 'grave', 'moderado', 'leve']
+        df['severidade'] = np.select(conditions, choices, default='sem_vitimas')
+            
         return df
     
     @staticmethod
@@ -43,6 +41,5 @@ class FeatureEngineering:
         """Executa todo o pipeline de engenharia de features."""
         df = FeatureEngineering.extract_datetime_features(df)
         df = FeatureEngineering.categorize_severity(df)
-        df = FeatureEngineering.create_binary_features(df)
         df = FeatureEngineering.aggregate_features(df)
         return df

@@ -6,6 +6,8 @@ from data_collection.collect_data import CollectData
 from data_collection.collect_data_detran import CollectDataDetran
 from preprocessing.merge_datasets import DatasetMerger
 from preprocessing.data_cleaning import DataCleaning
+from preprocessing.feature_engineering import FeatureEngineering
+from preprocessing.feature_transformation import FeatureSelection
 import logging
 
 logging.basicConfig(
@@ -79,10 +81,6 @@ class DataCleaningTransformer(BaseEstimator, TransformerMixin):
                 clean_df = self.data_cleaning.clean_dataset(df)
                 result[dataset_type] = clean_df
                 
-                output_path = f"dados_limpos_{dataset_type}_{result[dataset_type]['data_inversa'].min().year}_{result[dataset_type]['data_inversa'].max().year}.csv"
-                result[dataset_type].to_csv(output_path, index=False, sep=';', encoding='utf-8-sig')
-                logger.info(f"Dataset {dataset_type} limpo salvo em {output_path}")
-                
                 logger.info(f"Dataset {dataset_type} após limpeza:")
                 logger.info(f"Shape: {clean_df.shape}")
                 logger.info(f"Valores nulos: {clean_df.isnull().sum().sum()}")
@@ -93,6 +91,68 @@ class DataCleaningTransformer(BaseEstimator, TransformerMixin):
             logger.error(f"Erro durante a limpeza dos datasets: {str(e)}")
             raise
 
+class FeatureEngineeringTransformer(BaseEstimator, TransformerMixin):
+    """Transformador para Feature Engineering"""
+    def __init__(self):
+        pass
+    
+    def fit(self, X, y=None):
+        return self
+    
+    def transform(self, X):
+        logger.info("Iniciando feature engineering...")
+        try:
+            if isinstance(X, dict):
+                result = {}
+                for dataset_type, df in X.items():
+                    logger.info(f"Aplicando feature engineering no dataset {dataset_type}...")
+                    result[dataset_type] = FeatureEngineering.apply_feature_engineering(
+                        df.copy()
+                    )
+                return result
+            else:
+                return FeatureEngineering.apply_feature_engineering(
+                    X.copy()
+                )
+        except Exception as e:
+            logger.error(f"Erro durante o feature engineering: {str(e)}")
+            raise
+        
+class FeatureSelectionTransformer(BaseEstimator, TransformerMixin):
+    """Transformador para Seleção e Transformação de Features"""
+    def __init__(self):
+        self.feature_selector = FeatureSelection()
+    
+    def fit(self, X, y=None):
+        return self
+    
+    def transform(self, X):
+        logger.info("Iniciando seleção e transformação de features...")
+        try:
+            if isinstance(X, dict):
+                result = {}
+                for dataset_type, df in X.items():
+                    logger.info(f"Aplicando transformações no dataset {dataset_type}...")
+                    result[dataset_type] = self.feature_selector.transform_features(df.copy())
+                return result
+            else:
+                return self.feature_selector.transform_features(X.copy())
+                
+        except Exception as e:
+            logger.error(f"Erro durante a seleção e transformação de features: {str(e)}")
+            raise
+
+def save_processed_datasets(datasets: dict):
+    """Função para salvar os datasets processados"""
+    try:
+        for dataset_type, df in datasets.items():
+            output_path = f"dados_processados_{dataset_type}_{df['data_inversa'].min().year}_{df['data_inversa'].max().year}.csv"
+            df.to_csv(output_path, index=False, sep=';', encoding='utf-8-sig')
+            logger.info(f"Dataset {dataset_type} processado salvo em {output_path}")
+    except Exception as e:
+        logger.error(f"Erro ao salvar os datasets: {str(e)}")
+        raise
+
 def create_complete_pipeline(collect_new_data: bool = True):
     """Cria o pipeline completo para processamento dos datasets"""
     steps = []
@@ -102,7 +162,8 @@ def create_complete_pipeline(collect_new_data: bool = True):
     
     steps.extend([
         ('merge_datasets', DatasetMergerTransformer()),
-        ('clean_data', DataCleaningTransformer())
+        ('clean_data', DataCleaningTransformer()),
+        ('feature_engineering', FeatureEngineeringTransformer())
     ])
     
     return Pipeline(steps)
@@ -112,6 +173,8 @@ def main():
         pipeline = create_complete_pipeline(collect_new_data=False)
         results = pipeline.fit_transform(pd.DataFrame())
         
+        save_processed_datasets(results)
+        
         for dataset_type, df in results.items():
             logger.info(f"\nResultados finais - Dataset {dataset_type}:")
             logger.info(f"Shape final: {df.shape}")
@@ -120,6 +183,10 @@ def main():
             
             logger.info("\nDistribuição por classificação:")
             logger.info(df['classificacao_acidente'].value_counts())
+            
+            if 'severidade' in df.columns:
+                logger.info("\nDistribuição por severidade:")
+                logger.info(df['severidade'].value_counts())
         
     except Exception as e:
         logger.error(f"Erro durante o processamento: {str(e)}")
