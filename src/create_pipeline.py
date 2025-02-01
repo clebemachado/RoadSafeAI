@@ -4,7 +4,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import Pipeline
 from data_collection.collect_data import CollectData
 from data_collection.collect_data_detran import CollectDataDetran
-from preprocessing.merge_datasets import DatasetMerger
+from src.data_collection.merge_datasets import DatasetMerger
 from preprocessing.data_cleaning import DataCleaning
 from preprocessing.feature_engineering import FeatureEngineering
 from preprocessing.feature_transformation import FeatureSelection
