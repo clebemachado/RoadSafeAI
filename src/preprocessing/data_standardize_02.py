@@ -67,36 +67,22 @@ class DataStandardize:
     }
 
     @staticmethod
-    def padronizar_valores_numericos(df: pd.DataFrame) -> pd.DataFrame:
-        """
-        Padroniza os valores numéricos do dataset, convertendo para o tipo correto
-        e tratando possíveis inconsistências.
-        
-        Args:
-            df: DataFrame com as colunas numéricas
-            
-        Returns:
-            DataFrame com valores numéricos padronizados
-        """
-        df = df.copy()
-        
-        for col in DataStandardize.NUMERIC_COLUMNS:
-            if col in df.columns:
-                # Converter para string primeiro para garantir consistência no tratamento
-                df[col] = df[col].astype(str)
-                
-                # Remover caracteres não numéricos e espaços
-                df[col] = df[col].str.replace(',', '.')
-                df[col] = df[col].str.extract('(\d+\.?\d*)', expand=False)
-                
-                # Converter para float e depois para int
-                df[col] = pd.to_numeric(df[col], errors='coerce')
-                
-                # Todas as colunas numéricas serão inteiras
-                df[col] = df[col].fillna(0).astype(int)
-                
-                logger.info(f"Coluna {col} padronizada. Range: [{df[col].min()}, {df[col].max()}]")
-        
+    def adjust_numeric_type(df: pd.DataFrame, column: str, target_type: str) -> pd.DataFrame:
+        """Ajusta o tipo de dado de uma coluna para o tipo desejado, tratando valores nulos."""
+        initial_type = df[column].dtype
+        try:
+            if df[column].isnull().any():
+                df[column] = df[column].fillna(0)
+
+            # Se for int, usar 'Int64' para suportar NaN
+            if target_type == 'int64':
+                df[column] = df[column].astype('Int64')
+            else:
+                df[column] = df[column].astype(target_type)
+
+            logger.info(f"A coluna '{column}' foi convertida de {initial_type} para {df[column].dtype}.")
+        except Exception as e:
+            logger.error(f"Erro ao tentar converter a coluna '{column}' para {target_type}: {e}")
         return df
 
     @staticmethod
@@ -220,7 +206,7 @@ class DataStandardize:
         logger.info("Iniciando padronização do dataset...")
         
         # Padronizar valores numéricos
-        df = self.padronizar_valores_numericos(df)
+        df = self.adjust_numeric_type(df)
         logger.info("Valores numéricos padronizados")
         
         # Padronizar valores temporais
