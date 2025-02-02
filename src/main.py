@@ -3,7 +3,7 @@ import logging
 
 from data_collection.collect_data import CollectData
 from data_collection.collect_data_detran import CollectDataDetran
-from preprocessing.merge_datasets import DatasetMerger
+from src.data_collection.merge_datasets import DatasetMerger
 
 logging.basicConfig(
     level=logging.INFO,
