@@ -31,6 +31,7 @@ pyyaml==6.0.2
 pip-upgrader
 unidecode
 category-encoders
+imblearn
 
 # Necessários
 requests==2.32.3
