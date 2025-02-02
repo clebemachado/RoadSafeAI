@@ -1,8 +1,10 @@
-import pandas as pd
-import numpy as np
 import logging
-from typing import Optional
 import os
+from pathlib import Path
+
+import pandas as pd
+
+from config.config_project import ConfigProject
 
 logging.basicConfig(
     level=logging.INFO,
@@ -26,12 +28,6 @@ class FeatureEngineering:
         - Manhã: 06:00 - 11:59
         - Tarde: 12:00 - 17:59
         - Noite: 18:00 - 23:59
-        
-        Args:
-            df: DataFrame com a coluna 'horario'
-            
-        Returns:
-            DataFrame com a nova coluna 'periodo_dia'
         """
         df = df.copy()
         
@@ -191,29 +187,47 @@ class FeatureEngineering:
             logger.info(f"- {causa}: {contagem} registros")
             
         return df
+    
+    @staticmethod
+    def salvar_dataset(df: pd.DataFrame, nome_arquivo: str) -> None:
+        """
+        Salva o DataFrame processado em um arquivo CSV usando o caminho definido no config.yaml.
+        """
+        config = ConfigProject()
+        
+        pasta_destino = config.get("paths.output_files")
+        
+        if not pasta_destino:
+            logger.warning("Caminho de output não encontrado no config.yaml. Usando caminho padrão 'files/processed'")
+            pasta_destino = "files/processed"
+        
+        notebook_path = Path().absolute()  # Caminho atual
+        project_root = notebook_path.parent.parent  # Sobe dois níveis (notebooks/main -> root)
+        output_path = project_root / pasta_destino.strip("./")  # Remove ./ se existir e concatena
+        
+        output_path.mkdir(parents=True, exist_ok=True)
+        
+        caminho_arquivo = output_path / f"{nome_arquivo}.csv"
+        
+        df.to_csv(caminho_arquivo, index=False)
+        logger.info(f"Dataset processado salvo em: {caminho_arquivo}")
 
     @classmethod
-    def criar_todas_features(cls, df: pd.DataFrame) -> pd.DataFrame:
+    def criar_todas_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Aplica todas as transformações de feature engineering no dataset.
-        
-        Args:
-            df: DataFrame original
-            
-        Returns:
-            DataFrame com todas as novas features criadas
         """
         logger.info("Iniciando criação de novas features...")
         
         # Criar período do dia
-        df = cls.criar_periodo_dia(df)
+        df = self.criar_periodo_dia(df)
         logger.info("Feature 'periodo_dia' criada com sucesso")
         
         # Criar gravidade do acidente
-        df = cls.criar_gravidade_acidente(df)
+        df = self.criar_gravidade_acidente(df)
         logger.info("Feature 'gravidade_acidente' criada com sucesso")
         
-        df = cls.tratar_causas_acidente(df)
+        df = self.tratar_causas_acidente(df)
         logger.info("Feature 'causa_acidente_grupo' criada com sucesso")
 
 
@@ -225,5 +239,7 @@ class FeatureEngineering:
             logger.warning(f"Atenção: As seguintes colunas não foram criadas: {colunas_ausentes}")
         else:
             logger.info("Todas as features foram criadas com sucesso!")
+        
+        self.salvar_dataset(df, 'datatran_ma_processado')
         
         return df

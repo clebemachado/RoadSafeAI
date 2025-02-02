@@ -17,24 +17,6 @@ class DataCleaning:
     
     # Colunas para remover
     COLUMNS_TO_DROP = ['id', 'unnamed: 0', 'uf', 'tracado_via', 'feridos','fase_dia']
-    
-    # Mapeamento para padronização de texto
-    TEXT_STANDARDIZATION = {
-        'tipo_acidente': {
-            'Colisão Transversal': 'colisao transversal',
-            'Colisão com objeto fixo': 'colisao com objeto estatico',
-            'Colisão lateral mesmo sentido': 'colisao lateral',
-            'Colisão lateral sentido oposto': 'colisao lateral',
-            'Atropelamento de Pedestre': 'atropelamento de pessoa',
-            'Saída de Pista': 'saida de leito carrocavel'
-        },
-        'classificacao_acidente': {
-            'Com Vítimas Fatais': 'com vitimas fatais',
-            'Com Vítimas Feridas': 'com vitimas feridas',
-            'Sem Vítimas': 'sem vitimas',
-            'Ignorado': 'ignorado'
-        }
-    }
 
     @staticmethod
     def remove_duplicates(df: pd.DataFrame) -> pd.DataFrame:
@@ -88,23 +70,6 @@ class DataCleaning:
         logger.info(f"Colunas removidas: {columns_to_drop}")
         return df
 
-    @staticmethod
-    def standardize_text(df: pd.DataFrame, columns: List[str]) -> pd.DataFrame:
-        """
-        Padroniza o texto nas colunas especificadas usando o mapeamento definido.
-        """
-        df = df.copy()
-        for col in columns:
-            if col in df.columns and col in DataCleaning.TEXT_STANDARDIZATION:
-                # Converter para lowercase
-                df[col] = df[col].str.lower()
-                # Aplicar mapeamento
-                df[col] = df[col].replace(
-                    {k.lower(): v for k, v in DataCleaning.TEXT_STANDARDIZATION[col].items()}
-                )
-                logger.info(f"Coluna {col} padronizada. Valores únicos: {df[col].nunique()}")
-        return df
-
     @classmethod
     def clean_dataset(self, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -120,9 +85,6 @@ class DataCleaning:
         
         # Remover duplicatas
         df = self.remove_duplicates(df)
-        
-        # Padronizar texto nas colunas especificadas
-        df = self.standardize_text(df, ['tipo_acidente', 'classificacao_acidente'])
         
         logger.info("Processo de limpeza concluído com sucesso!")
         return df

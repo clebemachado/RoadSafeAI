@@ -42,7 +42,7 @@ class DataCollectionTransformer(BaseEstimator, TransformerMixin):
 
 class DatasetMergerTransformer(BaseEstimator, TransformerMixin):
     """Transformador para etapa de união dos datasets"""
-    def __init__(self, merger: DatasetMerger = None, dataset_type: Literal['base', 'complete'] = 'complete'):
+    def __init__(self, merger: DatasetMerger = None, dataset_type: Literal['base', 'complete'] = 'base'):
         """
         Inicializa o transformador de união de datasets.
         """
@@ -133,7 +133,7 @@ class PreprocessingPipeline:
     def __init__(
         self,
         collect_new_data: bool = True,
-        dataset_type: Literal['base', 'complete'] = 'complete',
+        dataset_type: Literal['base', 'complete'] = 'base',
         test_size: float = 0.2,
         valid_size: float = 0.2,
         balance_strategy: Optional[str] = None,
@@ -141,14 +141,6 @@ class PreprocessingPipeline:
     ):
         """
         Inicializa o pipeline de pré-processamento
-        
-        Args:
-            collect_new_data: Se deve coletar novos dados ou usar dados existentes
-            dataset_type: Tipo de dataset a ser usado ('base' ou 'complete')
-            test_size: Proporção do conjunto de teste
-            valid_size: Proporção do conjunto de validação
-            balance_strategy: Estratégia de balanceamento (None, 'smote', 'random_over', 'random_under', 'combined')
-            random_state: Semente para reprodutibilidade
         """
         self.collect_new_data = collect_new_data
         self.dataset_type = dataset_type
@@ -237,7 +229,7 @@ def main():
     try:
         pipeline = PreprocessingPipeline(
             collect_new_data=True,
-            dataset_type='complete',
+            dataset_type='base',
             test_size=0.2,
             valid_size=0.2,
             balance_strategy='smote',

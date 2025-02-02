@@ -5,10 +5,10 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 import pandas as pd
+from data_collection.dataframe_manipulation import DataFrameManipulation
+from data_collection.file_read_pandas import PandasReadFile
 
 from config.config_project import ConfigProject
-from rascunho_preprocessing.dataframe_manipulation import DataFrameManipulation
-from rascunho_preprocessing.file_read_pandas import PandasReadFile
 
 logging.basicConfig(
     level=logging.INFO,
