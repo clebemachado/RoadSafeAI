@@ -7,8 +7,8 @@ from typing import Dict, List, Optional
 import pandas as pd
 
 from config.config_project import ConfigProject
-from preprocessing.dataframe_manipulation import DataFrameManipulation
-from preprocessing.file_read_pandas import PandasReadFile
+from rascunho_preprocessing.dataframe_manipulation import DataFrameManipulation
+from rascunho_preprocessing.file_read_pandas import PandasReadFile
 
 logging.basicConfig(
     level=logging.INFO,
@@ -17,10 +17,10 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class DatasetMerger:
-    """Classe para unificar datasets de acidentes de diferentes anos,"""
+    """Classe para unificar datasets de acidentes do Maranhão"""
     
     def __init__(self):
-        self.config:ConfigProject = ConfigProject()
+        self.config = ConfigProject()
         
         self.project_root: Optional[Path] = self._get_project_root()
         self.data_dir: Optional[Path] = None
@@ -37,30 +37,27 @@ class DatasetMerger:
         self.extra_columns = ['latitude', 'longitude', 'regional', 'delegacia', 'uop']
         self._config_paths()
     
-    
     def execute(self) -> Dict[str, pd.DataFrame]:
         """
-        Executa o merge dos datasets retornando tanto o dataset base quanto o completo.
+        Executa o merge dos datasets do Maranhão retornando tanto o dataset base quanto o completo.
         
         Returns:
             Dict[str, pd.DataFrame]: Dicionário contendo 'base' e 'complete' DataFrames
         """
         merged_df_base = self._merge_datasets(start_year=2007, end_year=2024, include_extra_columns=False)
-        self.save_merged_dataset(merged_df_base, "datatran_merged_base_2007_2024.csv")
+        self.save_merged_dataset(merged_df_base, "datatran_ma_merged_base_2007_2024.csv")
         
         merged_df_complete = self._merge_datasets(start_year=2017, end_year=2024, include_extra_columns=True)
-        self.save_merged_dataset(merged_df_complete, "datatran_merged_complete_2017_2024.csv")
+        self.save_merged_dataset(merged_df_complete, "datatran_ma_merged_complete_2017_2024.csv")
         
         return {
             'base': merged_df_base,
             'complete': merged_df_complete
         }
-        
     
     def _get_project_root(self) -> Path:
         """Obtém o diretório raiz do projeto baseado no local do arquivo atual."""
         return Path(__file__).resolve().parent.parent.parent
-    
     
     def _config_paths(self):
         """Configura os diretórios de entrada e saída do projeto."""
@@ -72,13 +69,12 @@ class DatasetMerger:
                 raise ValueError("Os caminhos 'save_files' e 'output_files' não estão definidos na configuração.")
 
             self.data_dir = self.project_root / save_path
-            self.output_dir = self.project_root / output_path
+            self.output_dir = self.project_root / output_path / 'maranhao'  # Subdiretório específico para MA
 
             self._ensure_directories_exist()
 
         except Exception as e:
             raise RuntimeError(f"Erro ao configurar caminhos: {e}")
-    
     
     def _ensure_directories_exist(self):
         """Cria diretórios se eles não existirem e verifica a existência do diretório de dados."""
@@ -87,9 +83,7 @@ class DatasetMerger:
         if not self.data_dir.exists():
             raise FileNotFoundError(f"Diretório de dados não encontrado: {self.data_dir}")
     
-    
-    def _merge_datasets(self, start_year:int, end_year:int, include_extra_columns: bool) -> pd.DataFrame:
-        
+    def _merge_datasets(self, start_year: int, end_year: int, include_extra_columns: bool) -> pd.DataFrame:
         csv_files = sorted([
             f for f in self.data_dir.glob('datatran*.csv')
             if start_year <= DataFrameManipulation.exctract_year_from_filename(f.name) <= end_year
@@ -103,6 +97,11 @@ class DatasetMerger:
         df_list = self._find_all_csvs(include_extra_columns, csv_files)
 
         merged_df = pd.concat(df_list, ignore_index=True)
+        
+        # Filtra apenas dados do Maranhão
+        merged_df = merged_df[merged_df['uf'] == 'MA']
+        logger.info(f"Total de registros do Maranhão: {len(merged_df)}")
+        
         merged_df['data_inversa'] = pd.to_datetime(merged_df['data_inversa'], format="mixed")
         merged_df = merged_df.sort_values('data_inversa')
     
@@ -110,7 +109,6 @@ class DatasetMerger:
             merged_df = merged_df.drop(columns=self.extra_columns, errors="ignore")
 
         return merged_df
-    
     
     def _find_all_csvs(self, include_extra_columns: bool, csv_files: List[Path]) -> List[pd.DataFrame]:
         df_list = []
@@ -121,19 +119,23 @@ class DatasetMerger:
             
             try:
                 df = PandasReadFile.read_csv_file(file_path)
-                df_processed = self.process_dataset(df, year, include_extra_columns)
-                df_list.append(df_processed)
+                # Filtra dados do Maranhão antes do processamento
+                df = df[df['uf'] == 'MA']
+                if len(df) > 0:  # Só processa se houver dados do MA
+                    df_processed = self.process_dataset(df, year, include_extra_columns)
+                    df_list.append(df_processed)
+                else:
+                    logger.info(f"Nenhum registro do Maranhão encontrado para o ano {year}")
             except Exception as e:
                 logger.error(f"Erro ao processar {file_path.name}: {e}")
         
         return df_list
     
-    
-    def process_dataset(self, df: pd.DataFrame, year:int, include_extra_columns: bool = False) -> pd.DataFrame:
+    def process_dataset(self, df: pd.DataFrame, year: int, include_extra_columns: bool = False) -> pd.DataFrame:
         if 'ano' not in df.columns:
             df['ano'] = year
     
-        all_columns  = self.base_columns + (self.extra_columns if include_extra_columns else [])
+        all_columns = self.base_columns + (self.extra_columns if include_extra_columns else [])
         df = df.reindex(columns=all_columns, fill_value=None)
 
         numeric_columns = {
@@ -159,12 +161,11 @@ class DatasetMerger:
 
         return df
     
-    
-    def save_merged_dataset(self, df: pd.DataFrame, filename: str = "datatran_merged.csv"):
+    def save_merged_dataset(self, df: pd.DataFrame, filename: str = "datatran_ma_merged.csv"):
         output_path = self.output_dir / filename
         
         df.to_csv(output_path, index=False, encoding="utf-8-sig", sep=';')
-        logger.info(f"Dataset unificado salvo em {output_path}")
+        logger.info(f"Dataset do Maranhão unificado salvo em {output_path}")
         
         metadata = {
             'total_registros': len(df),
@@ -173,11 +174,10 @@ class DatasetMerger:
             'colunas': list(df.columns)
         }
         
-        metadata_path = self.output_dir / 'metadata.txt'
+        metadata_path = self.output_dir / 'metadata_ma.txt'
         
         with open(metadata_path, 'w', encoding='utf-8') as f:
             for key, value in metadata.items():
                 f.write(f"{key}: {value}\n")
             
-        logger.info(f"Metadados salvos em {metadata_path}")
-        
+        logger.info(f"Metadados do Maranhão salvos em {metadata_path}")
