@@ -17,6 +17,7 @@ folium==0.19.4
 # Jupyter
 notebook==7.3.2
 ipykernel==6.29.5
+jupyter
 
 # API and deployment
 fastapi==0.115.6

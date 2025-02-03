@@ -18,7 +18,7 @@ class DataStandardize:
     
     # Colunas numéricas que precisam ser verificadas/ajustadas
     NUMERIC_COLUMNS = [
-        'km', 'pessoas', 'mortos', 'feridos_leves',
+        'km', 'pessoas', 'mortos', 'feridos_leves', 
         'feridos_graves', 'ilesos', 'ignorados', 'feridos', 'veiculos'
     ]
     
@@ -47,42 +47,38 @@ class DataStandardize:
         'sexta-feira': 'sexta-feira',
         'sábado': 'sabado'
     }
-    
-    # Mapeamento para padronização de texto
-    TEXT_STANDARDIZATION = {
-        'tipo_acidente': {
-            'Colisão Transversal': 'colisao transversal',
-            'Colisão com objeto fixo': 'colisao com objeto estatico',
-            'Colisão lateral mesmo sentido': 'colisao lateral',
-            'Colisão lateral sentido oposto': 'colisao lateral',
-            'Atropelamento de Pedestre': 'atropelamento de pessoa',
-            'Saída de Pista': 'saida de leito carrocavel'
-        },
-        'classificacao_acidente': {
-            'Com Vítimas Fatais': 'com vitimas fatais',
-            'Com Vítimas Feridas': 'com vitimas feridas',
-            'Sem Vítimas': 'sem vitimas',
-            'Ignorado': 'ignorado'
-        }
-    }
 
     @staticmethod
-    def adjust_numeric_type(df: pd.DataFrame, column: str, target_type: str) -> pd.DataFrame:
-        """Ajusta o tipo de dado de uma coluna para o tipo desejado, tratando valores nulos."""
-        initial_type = df[column].dtype
-        try:
-            if df[column].isnull().any():
-                df[column] = df[column].fillna(0)
-
-            # Se for int, usar 'Int64' para suportar NaN
-            if target_type == 'int64':
-                df[column] = df[column].astype('Int64')
-            else:
-                df[column] = df[column].astype(target_type)
-
-            logger.info(f"A coluna '{column}' foi convertida de {initial_type} para {df[column].dtype}.")
-        except Exception as e:
-            logger.error(f"Erro ao tentar converter a coluna '{column}' para {target_type}: {e}")
+    def padronizar_valores_numericos(df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Padroniza os valores numéricos do dataset, convertendo para o tipo correto
+        e tratando possíveis inconsistências.
+        
+        Args:
+            df: DataFrame com as colunas numéricas
+            
+        Returns:
+            DataFrame com valores numéricos padronizados
+        """
+        df = df.copy()
+        
+        for col in DataStandardize.NUMERIC_COLUMNS:
+            if col in df.columns:
+                # Converter para string primeiro para garantir consistência no tratamento
+                df[col] = df[col].astype(str)
+                
+                # Remover caracteres não numéricos e espaços
+                df[col] = df[col].str.replace(',', '.')
+                df[col] = df[col].str.extract('(\d+\.?\d*)', expand=False)
+                
+                # Converter para float e depois para int
+                df[col] = pd.to_numeric(df[col], errors='coerce')
+                
+                # Todas as colunas numéricas serão inteiras
+                df[col] = df[col].fillna(0).astype(int)
+                
+                logger.info(f"Coluna {col} padronizada. Range: [{df[col].min()}, {df[col].max()}]")
+        
         return df
 
     @staticmethod
@@ -103,9 +99,32 @@ class DataStandardize:
         # Converter data_inversa para datetime
         if 'data_inversa' in df.columns:
             df['data'] = pd.to_datetime(df['data_inversa'])
-            df['ano'] = df['data'].dt.year
             df.drop('data_inversa', axis=1, inplace=True)
             logger.info("Coluna data_inversa convertida para datetime e renomeada para 'data'")
+        
+        # Criar período do dia
+        if 'horario' in df.columns:
+            def get_periodo(horario):
+                try:
+                    hora = int(horario.split(':')[0])
+                    if 0 <= hora < 6:
+                        return 'madrugada'
+                    elif 6 <= hora < 12:
+                        return 'manha'
+                    elif 12 <= hora < 18:
+                        return 'tarde'
+                    else:
+                        return 'noite'
+                except:
+                    return None
+            
+            df['periodo_dia'] = df['horario'].apply(get_periodo)
+            
+            # Log da distribuição dos períodos
+            periodo_counts = df['periodo_dia'].value_counts()
+            logger.info("Distribuição dos períodos do dia:")
+            for periodo, count in periodo_counts.items():
+                logger.info(f"- {periodo}: {count}")
         
         return df
 
@@ -175,25 +194,8 @@ class DataStandardize:
         
         return df
 
-    @staticmethod
-    def standardize_text(df: pd.DataFrame, columns: List[str]) -> pd.DataFrame:
-        """
-        Padroniza o texto nas colunas especificadas usando o mapeamento definido.
-        """
-        df = df.copy()
-        for col in columns:
-            if col in df.columns and col in DataStandardize.TEXT_STANDARDIZATION:
-                # Converter para lowercase
-                df[col] = df[col].str.lower()
-                # Aplicar mapeamento
-                df[col] = df[col].replace(
-                    {k.lower(): v for k, v in DataStandardize.TEXT_STANDARDIZATION[col].items()}
-                )
-                logger.info(f"Coluna {col} padronizada. Valores únicos: {df[col].nunique()}")
-        return df
-
     @classmethod
-    def padronizar_dataset(self, df: pd.DataFrame) -> pd.DataFrame:
+    def padronizar_dataset(cls, df: pd.DataFrame) -> pd.DataFrame:
         """
         Aplica todas as padronizações no dataset.
         
@@ -206,23 +208,19 @@ class DataStandardize:
         logger.info("Iniciando padronização do dataset...")
         
         # Padronizar valores numéricos
-        df = self.adjust_numeric_type(df)
+        df = cls.padronizar_valores_numericos(df)
         logger.info("Valores numéricos padronizados")
         
         # Padronizar valores temporais
-        df = self.padronizar_valores_temporais(df)
+        df = cls.padronizar_valores_temporais(df)
         logger.info("Valores temporais padronizados")
         
         # Padronizar uso_solo
-        df = self.padronizar_uso_solo(df)
+        df = cls.padronizar_uso_solo(df)
         logger.info("Coluna uso_solo padronizada")
         
-        # Padronizar texto nas colunas especificadas
-        df = self.standardize_text(df, ['tipo_acidente', 'classificacao_acidente'])
-        logger.info("Coluna tipo_acidente e classificacao_acidente padronizada")
-        
         # Padronizar dia_semana
-        df = self.padronizar_dia_semana(df)
+        df = cls.padronizar_dia_semana(df)
         logger.info("Coluna dia_semana padronizada")
         
         return df

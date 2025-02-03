@@ -1,7 +1,5 @@
 ## Do projeto
-files/**/*
-files/*
-files/**
+files/processed/**
 data/raw
 data/**
 data/**/*
