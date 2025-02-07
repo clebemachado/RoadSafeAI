@@ -46,14 +46,56 @@ class DataEncoding:
         }
     }
     
+    # Colunas que devem ser removidas antes do encoding
+    COLUMNS_TO_REMOVE = [
+        'feridos_graves',
+        'mortos',
+        'feridos_leves',
+        'ilesos'
+    ]
+    
     def __init__(self):
-        """Inicializa os encoders."""
+        """Inicializa os encoders e lista de colunas a serem removidas."""
         self.label_encoders = {}
         self.onehot_encoder = None
         self.target_encoders = {}
         self.onehot_features = None
         self.target_features = None
+        self.columns_to_remove = self.COLUMNS_TO_REMOVE.copy()
     
+    def set_columns_to_remove(self, columns: List[str], append: bool = False):
+        """
+        Define as colunas que devem ser removidas antes do encoding.
+        
+        Args:
+            columns: Lista de nomes das colunas a serem removidas
+            append: Se True, adiciona as colunas à lista padrão. Se False, substitui a lista padrão
+        """
+        if append:
+            self.columns_to_remove.extend(columns)
+        else:
+            self.columns_to_remove = columns
+        logger.info(f"Definidas {len(self.columns_to_remove)} colunas para remoção: {self.columns_to_remove}")
+    
+    def _remove_columns(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Remove as colunas especificadas do DataFrame.
+        
+        Args:
+            df: DataFrame original
+            
+        Returns:
+            DataFrame sem as colunas removidas
+        """
+        df_cleaned = df.copy()
+        columns_present = [col for col in self.columns_to_remove if col in df_cleaned.columns]
+        
+        if columns_present:
+            df_cleaned = df_cleaned.drop(columns=columns_present)
+            logger.info(f"Removidas as colunas: {columns_present}")
+        
+        return df_cleaned
+
     def _identify_categorical_columns(self, df: pd.DataFrame, target_column: str,
                                    max_categories_onehot: int = 5) -> Tuple[List[str], List[str]]:
         """
@@ -96,14 +138,17 @@ class DataEncoding:
         """
         logger.info("Iniciando fit dos encoders...")
         
+        # Remover colunas especificadas
+        df_cleaned = self._remove_columns(df)
+        
         # Identificar colunas categóricas e estratégias
         self.onehot_features, self.target_features = self._identify_categorical_columns(
-            df, target_column, max_categories_onehot
+            df_cleaned, target_column, max_categories_onehot
         )
         
         # Ajustar Label Encoders para colunas ordinais
         for col in self.ORDINAL_COLUMNS:
-            if col in df.columns:
+            if col in df_cleaned.columns:
                 self.label_encoders[col] = LabelEncoder()
                 # Garantir que o encoder respeite a ordem definida
                 ordered_categories = list(self.ORDINAL_MAPPING[col].keys())
@@ -118,13 +163,13 @@ class DataEncoding:
                 ],
                 remainder='passthrough'
             )
-            self.onehot_encoder.fit(df[self.onehot_features])
+            self.onehot_encoder.fit(df_cleaned[self.onehot_features])
             logger.info(f"OneHot Encoder ajustado para {self.onehot_features}")
         
         # Ajustar Target Encoders
         for col in self.target_features:
             self.target_encoders[col] = TargetEncoder()
-            self.target_encoders[col].fit(df[[col]], df[target_column])
+            self.target_encoders[col].fit(df_cleaned[[col]], df_cleaned[target_column])
             logger.info(f"Target Encoder ajustado para {col}")
 
     def transform(self, df: pd.DataFrame, target_column: str) -> pd.DataFrame:
@@ -138,7 +183,8 @@ class DataEncoding:
         Returns:
             DataFrame com encodings aplicados
         """
-        df_transformed = df.copy()
+        # Remover colunas especificadas
+        df_transformed = self._remove_columns(df)
         
         # Aplicar Label Encoding para colunas ordinais
         for col, encoder in self.label_encoders.items():
@@ -199,6 +245,7 @@ class DataEncoding:
         feature_names = {
             'ordinal_encoded': list(self.label_encoders.keys()),
             'onehot_encoded': self.onehot_features if self.onehot_features else [],
-            'target_encoded': list(self.target_encoders.keys())
+            'target_encoded': list(self.target_encoders.keys()),
+            'removed_columns': self.columns_to_remove
         }
         return feature_names
