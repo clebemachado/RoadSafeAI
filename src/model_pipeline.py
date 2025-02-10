@@ -1,11 +1,16 @@
+import json
 import logging
+import os
+from datetime import datetime
 from typing import Dict, List, Tuple
-import pandas as pd
+
 import matplotlib.pyplot as plt
+import pandas as pd
 from sklearn.base import BaseEstimator
 
-from pipeline import PreprocessingPipeline
+from model.model_result_saver import ModelResultsSaver
 from model.model_trainer import ModelTrainer
+from pipeline import PreprocessingPipeline
 
 logging.basicConfig(
     level=logging.INFO,
@@ -16,15 +21,19 @@ logger = logging.getLogger(__name__)
 class ModelingPipeline:
     """Classe principal para gerenciar o pipeline de modelagem"""
     
-    def __init__(self, models: List[Tuple[str, BaseEstimator]]):
+    def __init__(self, models: List[Tuple[str, BaseEstimator]], 
+                 output_dir: str = "model_results"):
         """
         Inicializa o pipeline de modelagem
         
         Args:
             models: Lista de tuplas (nome_modelo, modelo)
+            output_dir: Diretório para salvar os resultados
         """
         self.trainers = [ModelTrainer(model, name) for name, model in models]
         self.results = {}
+        self.results_saver = ModelResultsSaver(output_dir)
+        self.results_saver.setup_directories([t.name for t in self.trainers])
     
     def run_pipeline(
         self,
@@ -37,19 +46,7 @@ class ModelingPipeline:
         classes: List[str]
     ) -> Dict:
         """
-        Executa o pipeline completo de modelagem
-        
-        Args:
-            X_train: Features de treino
-            X_valid: Features de validação
-            X_test: Features de teste
-            y_train: Target de treino
-            y_valid: Target de validação
-            y_test: Target de teste
-            classes: Lista com os nomes das classes
-            
-        Returns:
-            Dict com os resultados de todos os modelos
+        Executa o pipeline completo de modelagem e salva resultado
         """
         for trainer in self.trainers:
             logger.info(f"\nProcessando modelo: {trainer.name}")
@@ -65,27 +62,65 @@ class ModelingPipeline:
             # Realiza validação cruzada
             cv_mean, cv_std = trainer.cross_validate(X_train, y_train)
             
-            # Plota matriz de confusão
+            # Gera predições para plots
             y_pred = model.predict(X_test)
-            trainer.evaluator.plot_confusion_matrix(y_test, y_pred, classes)
             
             # Armazena resultados
-            self.results[trainer.name] = {
+            model_results = {
                 'model': model,
                 'train_metrics': train_metrics,
                 'valid_metrics': valid_metrics,
                 'test_metrics': test_metrics,
                 'cv_results': {'mean': cv_mean, 'std': cv_std}
             }
+            
+            self.results[trainer.name] = model_results
+            
+            # Salva resultados do modelo
+            self.results_saver.save_metrics(
+                {
+                    'train_metrics': train_metrics,
+                    'valid_metrics': valid_metrics,
+                    'test_metrics': test_metrics,
+                    'cv_results': {'mean': cv_mean, 'std': cv_std}
+                },
+                trainer.name,
+                'metrics.json'
+            )
+            
+            # Obtém a função de plot de importância das features apenas se for um modelo baseado em árvore
+            feature_importance_func = None
+            if hasattr(model, 'feature_importances_'):
+                feature_importance_func = trainer.tree_evaluator.plot_feature_importance
+            
+            self.results_saver.save_plots(
+                model,
+                trainer.name,
+                y_test,
+                y_pred,
+                classes,
+                X_test,
+                trainer.evaluator.plot_confusion_matrix,
+                feature_importance_func
+            )
+            
+            self.results_saver.save_model_summary(
+                model,
+                trainer.name,
+                model_results
+            )
+        
+        # Salva resultados comparativos
+        self.results_saver.save_comparison_results(
+            self.results,
+            self.compare_models
+        )
         
         return self.results
     
     def compare_models(self, metric: str = 'f1') -> None:
         """
         Compara os modelos usando uma métrica específica
-        
-        Args:
-            metric: Nome da métrica para comparação
         """
         comparison = {
             'Treino': [r['train_metrics'][metric] for r in self.results.values()],
@@ -94,15 +129,12 @@ class ModelingPipeline:
         }
         
         df_comparison = pd.DataFrame(comparison, index=self.results.keys())
-        
-        plt.figure(figsize=(12, 6))
         df_comparison.plot(kind='bar')
         plt.title(f'Comparação dos Modelos - Métrica: {metric}')
         plt.xlabel('Modelo')
         plt.ylabel(f'Score {metric}')
         plt.xticks(rotation=45)
         plt.tight_layout()
-        plt.show()
 
 # Exemplo de uso
 def create_tree_based_models(
@@ -111,20 +143,11 @@ def create_tree_based_models(
 ) -> List[Tuple[str, BaseEstimator]]:
     """
     Cria uma lista de modelos baseados em árvore de decisão
-    
-    Args:
-        random_state: Semente aleatória
-        n_estimators: Número de estimadores para modelos ensemble
-        
-    Returns:
-        Lista de tuplas (nome_modelo, modelo)
     """
+    from sklearn.ensemble import (ExtraTreesClassifier,
+                                  GradientBoostingClassifier,
+                                  RandomForestClassifier)
     from sklearn.tree import DecisionTreeClassifier
-    from sklearn.ensemble import (
-        RandomForestClassifier,
-        ExtraTreesClassifier,
-        GradientBoostingClassifier
-    )
     
     models = [
         (
@@ -168,7 +191,7 @@ def main():
     from sklearn.ensemble import RandomForestClassifier
     from sklearn.linear_model import LogisticRegression
     from sklearn.svm import SVC
-    
+
     # Cria os modelos baseados em árvore
     models = create_tree_based_models(random_state=42, n_estimators=100)
     
@@ -192,9 +215,6 @@ def main():
         y_train, y_valid, y_test,
         classes=['classe1', 'classe2', 'classe3']  # substitua com suas classes
     )
-    
-    # Compara os modelos
-    pipeline.compare_models(metric='f1')
 
 if __name__ == "__main__":
     main()

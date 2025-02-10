@@ -1,12 +1,11 @@
 import logging
 from typing import Dict, List, Optional
-import numpy as np
-from sklearn.metrics import (
-    accuracy_score, precision_score, recall_score, f1_score,
-    roc_auc_score, confusion_matrix
-)
+
 import matplotlib.pyplot as plt
+import numpy as np
 import seaborn as sns
+from sklearn.metrics import (accuracy_score, confusion_matrix, f1_score,
+                             precision_score, recall_score, roc_auc_score)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -37,10 +36,14 @@ class ModelEvaluator:
     @staticmethod
     def plot_confusion_matrix(y_true: np.ndarray, y_pred: np.ndarray, classes: List[str]) -> None:
         cm = confusion_matrix(y_true, y_pred)
-        plt.figure(figsize=(10, 8))
-        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
+        
+        # Normaliza a matriz
+        cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        
+        # Cria o heatmap
+        sns.heatmap(cm_normalized, annot=cm, fmt='d', cmap='Blues',
                    xticklabels=classes, yticklabels=classes)
         plt.title('Matriz de Confusão')
         plt.ylabel('Real')
         plt.xlabel('Predito')
-        plt.show()
+        plt.tight_layout()

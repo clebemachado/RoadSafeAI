@@ -1,7 +1,8 @@
 import logging
 from typing import List
-import pandas as pd
+
 import matplotlib.pyplot as plt
+import pandas as pd
 import seaborn as sns
 from sklearn.base import BaseEstimator
 
@@ -22,10 +23,8 @@ class TreeModelEvaluator:
         })
         importances = importances.sort_values('importance', ascending=False).head(top_n)
         
-        plt.figure(figsize=(10, 6))
         sns.barplot(data=importances, x='importance', y='feature')
         plt.title(f'Top {top_n} Features Mais Importantes')
         plt.xlabel('Importância')
         plt.ylabel('Feature')
         plt.tight_layout()
-        plt.show()

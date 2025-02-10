@@ -3,7 +3,8 @@ from typing import Dict, Tuple
 import pandas as pd
 from sklearn.model_selection import cross_val_score
 from sklearn.base import BaseEstimator
-from model.model_evaluator import ModelEvaluator  # Changed import
+from model.model_evaluator import ModelEvaluator
+from model.tree_model_evaluator import TreeModelEvaluator  # Changed import
 
 logging.basicConfig(
     level=logging.INFO,
@@ -18,6 +19,7 @@ class ModelTrainer:
         self.model = model
         self.name = name
         self.evaluator = ModelEvaluator()
+        self.tree_evaluator = TreeModelEvaluator()  # Adiciona o avaliador de árvores
     
     def train(self, X_train: pd.DataFrame, y_train: pd.Series) -> BaseEstimator:
         logger.info(f"Iniciando treinamento do modelo {self.name}...")
