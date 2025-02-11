@@ -11,6 +11,10 @@ dataset/
 **/__pycache__/**/*
 **/__pycache__/*
 .vscode
+notebooks/main/model_results
+resultados/**
+resultados
+catboost_info
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
