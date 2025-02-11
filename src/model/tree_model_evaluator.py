@@ -5,18 +5,13 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 from sklearn.base import BaseEstimator
+from config.inject_logger import inject_logger
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
+@inject_logger
 class TreeModelEvaluator:
     """Classe específica para avaliação de modelos baseados em árvore"""
     
-    @staticmethod
-    def plot_feature_importance(model: BaseEstimator, feature_names: List[str], top_n: int = 20) -> None:
+    def plot_feature_importance(self, model: BaseEstimator, feature_names: List[str], top_n: int = 20) -> None:
         importances = pd.DataFrame({
             'feature': feature_names,
             'importance': model.feature_importances_

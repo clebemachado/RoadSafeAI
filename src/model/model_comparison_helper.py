@@ -6,8 +6,7 @@ import seaborn as sns
 class ModelComparisonHelper:
     """Classe para auxiliar na comparação entre diferentes tipos de modelos"""
     
-    @staticmethod
-    def compare_all_models(tree_results: Dict, non_tree_results: Dict) -> pd.DataFrame:
+    def compare_all_models(self, tree_results: Dict, non_tree_results: Dict) -> pd.DataFrame:
         """
         Compara todos os modelos e retorna um DataFrame com as métricas
         """
@@ -33,8 +32,7 @@ class ModelComparisonHelper:
         
         return pd.DataFrame(comparison_data)
     
-    @staticmethod
-    def plot_model_comparison(comparison_df: pd.DataFrame, metric: str) -> None:
+    def plot_model_comparison(self, comparison_df: pd.DataFrame, metric: str) -> None:
         """
         Plota comparação visual entre modelos para uma métrica específica
         """

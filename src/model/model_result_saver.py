@@ -9,13 +9,9 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from sklearn.base import BaseEstimator
+from config.inject_logger import inject_logger
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
+@inject_logger
 class ModelResultsSaver:
   """Classe responsável por salvar todos os resultados dos modelos"""
   
@@ -38,7 +34,7 @@ class ModelResultsSaver:
     with open(filepath, 'w') as f:
       json.dump(metrics, f, indent=4)
       
-    logger.info(f"Metricas salvas em: {filepath}")
+    self.logger.info(f"Metricas salvas em: {filepath}")
     
   def save_plots(self, model: BaseEstimator, model_name: str, 
                   y_test: pd.Series, y_pred: np.ndarray,
@@ -78,7 +74,7 @@ class ModelResultsSaver:
                        dpi=300)
             plt.close()
         
-        logger.info(f"Plots salvos em: {model_dir}")
+        self.logger.info(f"Plots salvos em: {model_dir}")
         
   def get_model_dir(self, model_name: str) -> str:
     """
@@ -131,7 +127,7 @@ class ModelResultsSaver:
       f.write(f"Mean: {model_results['cv_results']['mean']:.4f}\n")
       f.write(f"Std: {model_results['cv_results']['std']:.4f}\n")
     
-    logger.info(f"Resumo do modelo salvo em: {filepath}")
+    self.logger.info(f"Resumo do modelo salvo em: {filepath}")
     
     
   def save_comparison_results(self, results: Dict[str, Dict], 
@@ -165,7 +161,7 @@ class ModelResultsSaver:
         plt.savefig(os.path.join(self.run_dir, f'comparison_{metric}.png'))
         plt.close()
     
-    logger.info(f"Resultados comparativos salvos em: {self.run_dir}")
+    self.logger.info(f"Resultados comparativos salvos em: {self.run_dir}")
     
   def get_run_directory(self) -> str:
     """Retorna o diretório da execução atual"""
