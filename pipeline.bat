@@ -1,18 +1,18 @@
 @echo off
 
 REM Verifica se o ambiente virtual existe
-if not exist env (
+if not exist .venv (
     echo Criando ambiente virtual...
-    python -m venv env
+    python -m venv .venv
 	echo ativando ambiente virtual...
-    call env\Scripts\activate
-    call env\Scripts\python -m pip install --upgrade pip
+    call .venv\Scripts\activate
+    call .venv\Scripts\python -m pip install --upgrade pip
 	echo Instalando dependências...
     pip install -r requirements.txt
 	echo Finalizado instalação de dependências...
 ) else (
-    call env\Scripts\activate
-    call env\Scripts\python -m pip install --upgrade pip
+    call .venv\Scripts\activate
+    call .venv\Scripts\python -m pip install --upgrade pip
 )
 
 echo Iniciando processo da pipeline...

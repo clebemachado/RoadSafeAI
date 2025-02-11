@@ -82,7 +82,7 @@ class DataCleaningTransformer(BaseEstimator, TransformerMixin):
     
     def transform(self, X):
         logger.info("Iniciando limpeza de dados...")
-        return self.cleaner.clean_dataset(X)
+        return self.cleaner.apply(X)
 
 class DataStandardizeTransformer(BaseEstimator, TransformerMixin):
     """Transformador para etapa de padronização de dados"""

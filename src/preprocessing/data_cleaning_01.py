@@ -1,34 +1,46 @@
 import pandas as pd
 import numpy as np
-import logging
-import unidecode
-from typing import List
+from config.inject_logger import inject_logger
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
+COLUMNS_TO_DROP = ['id', 'unnamed: 0', 'uf', 'tracado_via', 'feridos','fase_dia']
+
+
+@inject_logger
 class DataCleaning:
     """
     Classe responsável pela limpeza e preparação do dataset de acidentes.
     """
     
+    def apply(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Aplica todas as etapas de limpeza no dataset na ordem correta.
+        """
+        self.logger.info("Iniciando processo de limpeza do dataset...")
+        
+        # Remover colunas irrelevantes
+        df = self.remove_irrelevant_columns(df)
+        
+        # Tratar valores ausentes
+        df = self.handle_missing_values(df)
+        
+        # Remover duplicatas
+        df = self.remove_duplicates(df)
+        
+        self.logger.info("Processo de limpeza concluído com sucesso!")
+        return df
+    
     # Colunas para remover
-    COLUMNS_TO_DROP = ['id', 'unnamed: 0', 'uf', 'tracado_via', 'feridos','fase_dia']
 
-    @staticmethod
-    def remove_duplicates(df: pd.DataFrame) -> pd.DataFrame:
+    def remove_duplicates(self, df: pd.DataFrame) -> pd.DataFrame:
         """Remove registros duplicados do dataset."""
         initial_count = len(df)
         df = df.drop_duplicates()
         duplicates_removed = initial_count - len(df)
-        logger.info(f"Removidos {duplicates_removed} registros duplicados.")
+        self.logger.info(f"Removidos {duplicates_removed} registros duplicados.")
         return df
 
-    @staticmethod
-    def handle_missing_values(df: pd.DataFrame) -> pd.DataFrame:
+    def handle_missing_values(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Remove linhas que contêm valores nulos, vazios ou variações de null do dataframe.
         """
@@ -54,37 +66,17 @@ class DataCleaning:
         linhas_removidas = linhas_inicial - len(df_clean)
         percentual_removido = (linhas_removidas / linhas_inicial) * 100
         
-        logger.info(f"Estatísticas de limpeza:")
-        logger.info(f"- Linhas no dataset original: {linhas_inicial}")
-        logger.info(f"- Linhas removidas: {linhas_removidas}")
-        logger.info(f"- Percentual removido: {percentual_removido:.4f}%")
-        logger.info(f"- Linhas no dataset final: {len(df_clean)}")
+        self.logger.info("Estatísticas de limpeza:")
+        self.logger.info(f"- Linhas no dataset original: {linhas_inicial}")
+        self.logger.info(f"- Linhas removidas: {linhas_removidas}")
+        self.logger.info(f"- Percentual removido: {percentual_removido:.4f}%")
+        self.logger.info(f"- Linhas no dataset final: {len(df_clean)}")
         
         return df_clean
 
-    @staticmethod
-    def remove_irrelevant_columns(df: pd.DataFrame) -> pd.DataFrame:
+    def remove_irrelevant_columns(self, df: pd.DataFrame) -> pd.DataFrame:
         """Remove colunas irrelevantes do dataset."""
-        columns_to_drop = [col for col in DataCleaning.COLUMNS_TO_DROP if col in df.columns]
+        columns_to_drop = [col for col in COLUMNS_TO_DROP if col in df.columns]
         df = df.drop(columns=columns_to_drop)
-        logger.info(f"Colunas removidas: {columns_to_drop}")
-        return df
-
-    @classmethod
-    def clean_dataset(self, df: pd.DataFrame) -> pd.DataFrame:
-        """
-        Aplica todas as etapas de limpeza no dataset na ordem correta.
-        """
-        logger.info("Iniciando processo de limpeza do dataset...")
-        
-        # Remover colunas irrelevantes
-        df = self.remove_irrelevant_columns(df)
-        
-        # Tratar valores ausentes
-        df = self.handle_missing_values(df)
-        
-        # Remover duplicatas
-        df = self.remove_duplicates(df)
-        
-        logger.info("Processo de limpeza concluído com sucesso!")
+        self.logger.info(f"Colunas removidas: {columns_to_drop}")
         return df
