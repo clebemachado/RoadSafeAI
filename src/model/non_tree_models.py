@@ -5,7 +5,6 @@ from sklearn.base import BaseEstimator
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import SVC
 
 
 def get_non_tree_models(random_state: int = 42) -> List[Tuple[str, BaseEstimator]]:

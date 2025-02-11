@@ -1,17 +1,13 @@
 import logging
 from typing import Dict, List, Tuple
 
-import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder, TargetEncoder
+from config.inject_logger import inject_logger
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
+@inject_logger
 class DataEncoding:
     """
     Classe responsável pelo encoding de variáveis categóricas.
@@ -47,7 +43,7 @@ class DataEncoding:
     }
     
     # Colunas que devem ser removidas antes do encoding
-    COLUMNS_TO_REMOVE = [
+    _COLUMNS_TO_REMOVE = [
         'feridos_graves',
         'mortos',
         'feridos_leves',
@@ -61,7 +57,7 @@ class DataEncoding:
         self.target_encoders = {}
         self.onehot_features = None
         self.target_features = None
-        self.columns_to_remove = self.COLUMNS_TO_REMOVE.copy()
+        self.columns_to_remove = self._COLUMNS_TO_REMOVE.copy()
     
     def set_columns_to_remove(self, columns: List[str], append: bool = False):
         """
@@ -75,7 +71,7 @@ class DataEncoding:
             self.columns_to_remove.extend(columns)
         else:
             self.columns_to_remove = columns
-        logger.info(f"Definidas {len(self.columns_to_remove)} colunas para remoção: {self.columns_to_remove}")
+        self.logger.info(f"Definidas {len(self.columns_to_remove)} colunas para remoção: {self.columns_to_remove}")
     
     def _remove_columns(self, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -92,7 +88,7 @@ class DataEncoding:
         
         if columns_present:
             df_cleaned = df_cleaned.drop(columns=columns_present)
-            logger.info(f"Removidas as colunas: {columns_present}")
+            self.logger.info(f"Removidas as colunas: {columns_present}")
         
         return df_cleaned
 
@@ -118,7 +114,7 @@ class DataEncoding:
                 continue
                 
             n_unique = df[col].nunique()
-            logger.info(f"Coluna {col}: {n_unique} valores únicos")
+            self.logger.info(f"Coluna {col}: {n_unique} valores únicos")
             
             if n_unique <= max_categories_onehot:
                 onehot_columns.append(col)
@@ -136,7 +132,7 @@ class DataEncoding:
             target_column: Nome da coluna target que não deve ser encodada
             max_categories_onehot: Número máximo de categorias para usar OneHot
         """
-        logger.info("Iniciando fit dos encoders...")
+        self.logger.info("Iniciando fit dos encoders...")
         
         # Remover colunas especificadas
         df_cleaned = self._remove_columns(df)
@@ -153,7 +149,7 @@ class DataEncoding:
                 # Garantir que o encoder respeite a ordem definida
                 ordered_categories = list(self.ORDINAL_MAPPING[col].keys())
                 self.label_encoders[col].fit(ordered_categories)
-                logger.info(f"Label Encoder ajustado para {col}")
+                self.logger.info(f"Label Encoder ajustado para {col}")
         
         # Ajustar OneHot Encoder
         if self.onehot_features:
@@ -164,13 +160,13 @@ class DataEncoding:
                 remainder='passthrough'
             )
             self.onehot_encoder.fit(df_cleaned[self.onehot_features])
-            logger.info(f"OneHot Encoder ajustado para {self.onehot_features}")
+            self.logger.info(f"OneHot Encoder ajustado para {self.onehot_features}")
         
         # Ajustar Target Encoders
         for col in self.target_features:
             self.target_encoders[col] = TargetEncoder()
             self.target_encoders[col].fit(df_cleaned[[col]], df_cleaned[target_column])
-            logger.info(f"Target Encoder ajustado para {col}")
+            self.logger.info(f"Target Encoder ajustado para {col}")
 
     def transform(self, df: pd.DataFrame, target_column: str) -> pd.DataFrame:
         """
@@ -190,7 +186,7 @@ class DataEncoding:
         for col, encoder in self.label_encoders.items():
             if col in df_transformed.columns:
                 df_transformed[col] = encoder.transform(df_transformed[col].astype(str))
-                logger.info(f"Label Encoding aplicado em {col}")
+                self.logger.info(f"Label Encoding aplicado em {col}")
         
         # Aplicar OneHot Encoding
         if self.onehot_features:
@@ -206,7 +202,7 @@ class DataEncoding:
             df_transformed = df_transformed.drop(columns=self.onehot_features)
             onehot_df = pd.DataFrame(onehot_array, columns=feature_names, index=df_transformed.index)
             df_transformed = pd.concat([df_transformed, onehot_df], axis=1)
-            logger.info(f"OneHot Encoding aplicado em {self.onehot_features}")
+            self.logger.info(f"OneHot Encoding aplicado em {self.onehot_features}")
         
         # Aplicar Target Encoding
         for col, encoder in self.target_encoders.items():
@@ -215,7 +211,7 @@ class DataEncoding:
                 if transformed_values.ndim > 1:
                     transformed_values = transformed_values.mean(axis=1)
                 df_transformed[col] = transformed_values
-                logger.info(f"Target Encoding aplicado em {col}")
+                self.logger.info(f"Target Encoding aplicado em {col}")
         
         return df_transformed
 

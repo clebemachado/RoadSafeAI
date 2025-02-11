@@ -1,19 +1,14 @@
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import (accuracy_score, precision_score, recall_score, 
                            f1_score, roc_curve, auc, confusion_matrix)
 from sklearn.preprocessing import LabelBinarizer
+from config.inject_logger import inject_logger
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
+@inject_logger
 class NonTreeModelEvaluator:
     """Classe específica para avaliação de modelos não baseados em árvores"""
     

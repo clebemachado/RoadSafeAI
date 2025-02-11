@@ -6,18 +6,13 @@ import numpy as np
 import seaborn as sns
 from sklearn.metrics import (accuracy_score, confusion_matrix, f1_score,
                              precision_score, recall_score, roc_auc_score)
+from config.inject_logger import inject_logger
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
+@inject_logger
 class ModelEvaluator:
     """Classe responsável pela avaliação dos modelos"""
     
-    @staticmethod
-    def calculate_metrics(y_true: np.ndarray, y_pred: np.ndarray, y_prob: Optional[np.ndarray] = None) -> Dict:
+    def calculate_metrics(self, y_true: np.ndarray, y_pred: np.ndarray, y_prob: Optional[np.ndarray] = None) -> Dict:
         metrics = {
             'accuracy': accuracy_score(y_true, y_pred),
             'precision': precision_score(y_true, y_pred, average='weighted'),
@@ -29,12 +24,11 @@ class ModelEvaluator:
             try:
                 metrics['roc_auc'] = roc_auc_score(y_true, y_prob, multi_class='ovr')
             except Exception as e:
-                logger.warning(f"Não foi possível calcular ROC AUC: {str(e)}")
+                self.logger.warning(f"Não foi possível calcular ROC AUC: {str(e)}")
         
         return metrics
     
-    @staticmethod
-    def plot_confusion_matrix(y_true: np.ndarray, y_pred: np.ndarray, classes: List[str]) -> None:
+    def plot_confusion_matrix(self, y_true: np.ndarray, y_pred: np.ndarray, classes: List[str]) -> None:
         cm = confusion_matrix(y_true, y_pred)
         
         # Normaliza a matriz

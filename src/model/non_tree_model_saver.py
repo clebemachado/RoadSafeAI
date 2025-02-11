@@ -1,20 +1,16 @@
 import os
 import json
-import logging
 from typing import Dict, List
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+from config.inject_logger import inject_logger
 
 from model.non_tree_model_evaluator import NonTreeModelEvaluator
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
+@inject_logger
 class NonTreeResultsSaver:
     """Classe específica para salvar resultados de modelos não baseados em árvores"""
     
@@ -34,7 +30,7 @@ class NonTreeResultsSaver:
         with open(metrics_path, 'w') as f:
             json.dump(metrics, f, indent=4)
         
-        logger.info(f"Métricas salvas em: {metrics_path}")
+        self.logger.info(f"Métricas salvas em: {metrics_path}")
     
     def save_plots(self, model_name: str, evaluator: NonTreeModelEvaluator,
                   y_true: np.ndarray, y_pred: np.ndarray, y_prob: np.ndarray,
@@ -59,7 +55,7 @@ class NonTreeResultsSaver:
                        bbox_inches='tight', dpi=300)
             plt.close()
         
-        logger.info(f"Plots salvos em: {model_dir}")
+        self.logger.info(f"Plots salvos em: {model_dir}")
     
     def save_model_comparison(self, all_results: Dict[str, Dict]) -> None:
         """
@@ -97,4 +93,4 @@ class NonTreeResultsSaver:
                        bbox_inches='tight', dpi=300)
             plt.close()
         
-        logger.info(f"Comparação dos modelos salva em: {self.non_tree_dir}")
+        self.logger.info(f"Comparação dos modelos salva em: {self.non_tree_dir}")

@@ -1,16 +1,7 @@
-import logging
-from datetime import datetime
-from typing import Dict, List
-
-import numpy as np
 import pandas as pd
+from config.inject_logger import inject_logger
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
+@inject_logger
 class DataStandardize:
     """
     Classe responsável pela padronização dos dados do dataset de acidentes.
@@ -48,8 +39,7 @@ class DataStandardize:
         'sábado': 'sabado'
     }
 
-    @staticmethod
-    def padronizar_valores_numericos(df: pd.DataFrame) -> pd.DataFrame:
+    def padronizar_valores_numericos(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Padroniza os valores numéricos do dataset, convertendo para o tipo correto
         e tratando possíveis inconsistências.
@@ -77,12 +67,11 @@ class DataStandardize:
                 # Todas as colunas numéricas serão inteiras
                 df[col] = df[col].fillna(0).astype(int)
                 
-                logger.info(f"Coluna {col} padronizada. Range: [{df[col].min()}, {df[col].max()}]")
+                self.logger.info(f"Coluna {col} padronizada. Range: [{df[col].min()}, {df[col].max()}]")
         
         return df
 
-    @staticmethod
-    def padronizar_valores_temporais(df: pd.DataFrame) -> pd.DataFrame:
+    def padronizar_valores_temporais(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Padroniza as colunas temporais do dataset.
         - Converte data_inversa para datetime
@@ -100,7 +89,7 @@ class DataStandardize:
         if 'data_inversa' in df.columns:
             df['data'] = pd.to_datetime(df['data_inversa'])
             df.drop('data_inversa', axis=1, inplace=True)
-            logger.info("Coluna data_inversa convertida para datetime e renomeada para 'data'")
+            self.logger.info("Coluna data_inversa convertida para datetime e renomeada para 'data'")
         
         # Criar período do dia
         if 'horario' in df.columns:
@@ -122,14 +111,13 @@ class DataStandardize:
             
             # Log da distribuição dos períodos
             periodo_counts = df['periodo_dia'].value_counts()
-            logger.info("Distribuição dos períodos do dia:")
+            self.logger.info("Distribuição dos períodos do dia:")
             for periodo, count in periodo_counts.items():
-                logger.info(f"- {periodo}: {count}")
+                self.logger.info(f"- {periodo}: {count}")
         
         return df
 
-    @staticmethod
-    def padronizar_uso_solo(df: pd.DataFrame) -> pd.DataFrame:
+    def padronizar_uso_solo(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Padroniza a coluna uso_solo conforme dicionário da PRF.
         Rural -> Não
@@ -146,24 +134,23 @@ class DataStandardize:
         if 'uso_solo' in df.columns:
             # Registrar valores únicos antes da transformação
             valores_originais = df['uso_solo'].unique()
-            logger.info(f"Valores únicos originais em uso_solo: {valores_originais}")
+            self.logger.info(f"Valores únicos originais em uso_solo: {valores_originais}")
             
             # Aplicar mapeamento
             df['uso_solo'] = df['uso_solo'].replace(DataStandardize.USO_SOLO_MAPPING)
             
             # Registrar valores únicos após a transformação
             valores_finais = df['uso_solo'].unique()
-            logger.info(f"Valores únicos após padronização em uso_solo: {valores_finais}")
+            self.logger.info(f"Valores únicos após padronização em uso_solo: {valores_finais}")
             
             # Verificar se existem valores não mapeados
             valores_nao_mapeados = set(valores_originais) - set(DataStandardize.USO_SOLO_MAPPING.keys())
             if valores_nao_mapeados:
-                logger.warning(f"Valores não mapeados em uso_solo: {valores_nao_mapeados}")
+                self.logger.warning(f"Valores não mapeados em uso_solo: {valores_nao_mapeados}")
         
         return df
 
-    @staticmethod
-    def padronizar_dia_semana(df: pd.DataFrame) -> pd.DataFrame:
+    def padronizar_dia_semana(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Padroniza os valores da coluna dia_semana para um formato único.
         
@@ -178,24 +165,23 @@ class DataStandardize:
         if 'dia_semana' in df.columns:
             # Registrar valores únicos antes da transformação
             valores_originais = df['dia_semana'].unique()
-            logger.info(f"Valores únicos originais em dia_semana: {valores_originais}")
+            self.logger.info(f"Valores únicos originais em dia_semana: {valores_originais}")
             
             # Aplicar mapeamento
             df['dia_semana'] = df['dia_semana'].replace(DataStandardize.DIAS_SEMANA_MAPPING)
             
             # Registrar valores únicos após a transformação
             valores_finais = df['dia_semana'].unique()
-            logger.info(f"Valores únicos após padronização em dia_semana: {valores_finais}")
+            self.logger.info(f"Valores únicos após padronização em dia_semana: {valores_finais}")
             
             # Verificar se existem valores não mapeados
             valores_nao_mapeados = set(valores_originais) - set(DataStandardize.DIAS_SEMANA_MAPPING.keys())
             if valores_nao_mapeados:
-                logger.warning(f"Valores não mapeados em dia_semana: {valores_nao_mapeados}")
+                self.logger.warning(f"Valores não mapeados em dia_semana: {valores_nao_mapeados}")
         
         return df
 
-    @classmethod
-    def padronizar_dataset(cls, df: pd.DataFrame) -> pd.DataFrame:
+    def padronizar_dataset(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Aplica todas as padronizações no dataset.
         
@@ -205,22 +191,22 @@ class DataStandardize:
         Returns:
             DataFrame padronizado
         """
-        logger.info("Iniciando padronização do dataset...")
+        self.logger.info("Iniciando padronização do dataset...")
         
         # Padronizar valores numéricos
-        df = cls.padronizar_valores_numericos(df)
-        logger.info("Valores numéricos padronizados")
+        df = self.padronizar_valores_numericos(df)
+        self.logger.info("Valores numéricos padronizados")
         
         # Padronizar valores temporais
-        df = cls.padronizar_valores_temporais(df)
-        logger.info("Valores temporais padronizados")
+        df = self.padronizar_valores_temporais(df)
+        self.logger.info("Valores temporais padronizados")
         
         # Padronizar uso_solo
-        df = cls.padronizar_uso_solo(df)
-        logger.info("Coluna uso_solo padronizada")
+        df = self.padronizar_uso_solo(df)
+        self.logger.info("Coluna uso_solo padronizada")
         
         # Padronizar dia_semana
-        df = cls.padronizar_dia_semana(df)
-        logger.info("Coluna dia_semana padronizada")
+        df = self.padronizar_dia_semana(df)
+        self.logger.info("Coluna dia_semana padronizada")
         
         return df

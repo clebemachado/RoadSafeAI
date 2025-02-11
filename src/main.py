@@ -1,4 +1,3 @@
-import sys
 import logging
 
 from data_collection.collect_data import CollectData

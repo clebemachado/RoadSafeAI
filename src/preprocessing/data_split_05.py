@@ -1,15 +1,12 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-import logging
-from typing import Tuple, List, Dict
+from typing import Tuple
+from config.inject_logger import inject_logger
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
+
+@inject_logger
 class DataSplit:
     """
     Classe responsável pela separação dos dados.
@@ -23,8 +20,7 @@ class DataSplit:
         'causa_acidente' # Usar causa acidente agrupado
     ]
     
-    @staticmethod
-    def remove_unused_columns(df: pd.DataFrame) -> pd.DataFrame:
+    def remove_unused_columns(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Remove colunas que não serão utilizadas no modelo.
         
@@ -39,12 +35,11 @@ class DataSplit:
         
         if columns_to_drop:
             df.drop(columns=columns_to_drop, inplace=True)
-            logger.info(f"Colunas removidas: {columns_to_drop}")
+            self.logger.info(f"Colunas removidas: {columns_to_drop}")
         
         return df
 
-    @staticmethod
-    def check_target_distribution(y: pd.Series, set_name: str = "") -> None:
+    def check_target_distribution(self, y: pd.Series, set_name: str = "") -> None:
         """
         Verifica e loga a distribuição das classes no target.
         
@@ -53,12 +48,12 @@ class DataSplit:
             set_name: Nome do conjunto de dados (para logging)
         """
         dist = y.value_counts(normalize=True) * 100
-        logger.info(f"\nDistribuição das classes{' - ' + set_name if set_name else ''}:")
+        self.logger.info(f"\nDistribuição das classes{' - ' + set_name if set_name else ''}:")
         for classe, prop in dist.items():
-            logger.info(f"- Classe {classe}: {prop:.2f}%")
+            self.logger.info(f"- Classe {classe}: {prop:.2f}%")
 
-    @staticmethod
     def split_data(
+        self,
         df: pd.DataFrame,
         test_size: float = 0.2,
         valid_size: float = 0.2,
@@ -83,8 +78,8 @@ class DataSplit:
         y = df['gravidade_acidente']
         
         # Verificar distribuição inicial das classes
-        logger.info("Distribuição inicial das classes:")
-        DataSplit.check_target_distribution(y)
+        self.logger.info("Distribuição inicial das classes:")
+        self.check_target_distribution(y)
         
         # Primeiro split: separa o conjunto de teste
         X_temp, X_test, y_temp, y_test = train_test_split(
@@ -104,21 +99,20 @@ class DataSplit:
         )
         
         # Log das dimensões dos conjuntos
-        logger.info(f"\nDimensões dos conjuntos:")
-        logger.info(f"- Treino: {X_train.shape}")
-        logger.info(f"- Validação: {X_valid.shape}")
-        logger.info(f"- Teste: {X_test.shape}")
+        self.logger.info("\nDimensões dos conjuntos:")
+        self.logger.info(f"- Treino: {X_train.shape}")
+        self.logger.info(f"- Validação: {X_valid.shape}")
+        self.logger.info(f"- Teste: {X_test.shape}")
         
         # Verificar distribuição das classes em cada conjunto
-        DataSplit.check_target_distribution(y_train, "Treino")
-        DataSplit.check_target_distribution(y_valid, "Validação")
-        DataSplit.check_target_distribution(y_test, "Teste")
+        self.check_target_distribution(y_train, "Treino")
+        self.check_target_distribution(y_valid, "Validação")
+        self.check_target_distribution(y_test, "Teste")
         
         return X_train, X_valid, X_test, y_train, y_valid, y_test
 
-    @classmethod
     def prepare_data(
-        cls,
+        self,
         df: pd.DataFrame,
         test_size: float = 0.2,
         valid_size: float = 0.2,
@@ -138,20 +132,20 @@ class DataSplit:
             - X_train, X_valid, X_test: Features para treino, validação e teste
             - y_train, y_valid, y_test: Target para treino, validação e teste
         """
-        logger.info("Iniciando preparação dos dados...")
+        self.logger.info("Iniciando preparação dos dados...")
         
         # Remover colunas não utilizadas
-        df = cls.remove_unused_columns(df)
+        df = self.remove_unused_columns(df)
         
         # Split dos dados
-        X_train, X_valid, X_test, y_train, y_valid, y_test = cls.split_data(
+        X_train, X_valid, X_test, y_train, y_valid, y_test = self.split_data(
             df,
             test_size=test_size,
             valid_size=valid_size,
             random_state=random_state
         )
         
-        logger.info("Preparação dos dados concluída!")
+        self.logger.info("Preparação dos dados concluída!")
         
         return X_train, X_valid, X_test, y_train, y_valid, y_test
 
