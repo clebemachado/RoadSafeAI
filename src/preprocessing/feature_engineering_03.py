@@ -1,25 +1,17 @@
-import logging
-import os
 from pathlib import Path
-
+from config.inject_logger import inject_logger
 import pandas as pd
 
 from config.config_project import ConfigProject
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
+@inject_logger
 class FeatureEngineering:
     """
     Classe responsável pela criação de novas variáveis (feature engineering)
     para o dataset de acidentes.
     """
     
-    @staticmethod
-    def criar_periodo_dia(df: pd.DataFrame) -> pd.DataFrame:
+    def criar_periodo_dia(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Cria a variável periodo_dia a partir do horário.
         
@@ -49,16 +41,15 @@ class FeatureEngineering:
         
         # Log da distribuição dos períodos
         distribuicao = df['periodo_dia'].value_counts()
-        logger.info("Distribuição dos períodos do dia:")
+        self.logger.info("Distribuição dos períodos do dia:")
         df.drop(columns=['horario'], inplace=True)
-        logger.info("Removendo horario exato, adotado periodo do dia:")
+        self.logger.info("Removendo horario exato, adotado periodo do dia:")
         for periodo, contagem in distribuicao.items():
-            logger.info(f"- {periodo}: {contagem} registros")
+            self.logger.info(f"- {periodo}: {contagem} registros")
             
         return df
 
-    @staticmethod
-    def criar_gravidade_acidente(df: pd.DataFrame) -> pd.DataFrame:
+    def criar_gravidade_acidente(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Cria a variável gravidade_acidente baseada no número de vítimas.
         
@@ -96,14 +87,13 @@ class FeatureEngineering:
         
         # Log da distribuição das gravidades
         distribuicao = df['gravidade_acidente'].value_counts()
-        logger.info("Distribuição das gravidades dos acidentes:")
+        self.logger.info("Distribuição das gravidades dos acidentes:")
         for gravidade, contagem in distribuicao.items():
-            logger.info(f"- {gravidade}: {contagem} registros")
+            self.logger.info(f"- {gravidade}: {contagem} registros")
         
         return df
     
-    @staticmethod
-    def tratar_causas_acidente(df: pd.DataFrame, min_frequency: int = 10) -> pd.DataFrame:
+    def tratar_causas_acidente(self, df: pd.DataFrame, min_frequency: int = 10) -> pd.DataFrame:
         """
         Trata a coluna causa_acidente agrupando causas similares e tratando valores raros.
         
@@ -182,14 +172,13 @@ class FeatureEngineering:
         
         # Log da distribuição final
         distribuicao = df['causa_acidente_grupo'].value_counts()
-        logger.info("Distribuição final das causas agrupadas:")
+        self.logger.info("Distribuição final das causas agrupadas:")
         for causa, contagem in distribuicao.items():
-            logger.info(f"- {causa}: {contagem} registros")
+            self.logger.info(f"- {causa}: {contagem} registros")
             
         return df
     
-    @staticmethod
-    def salvar_dataset(df: pd.DataFrame, nome_arquivo: str) -> None:
+    def salvar_dataset(self, df: pd.DataFrame, nome_arquivo: str) -> None:
         """
         Salva o DataFrame processado em um arquivo CSV usando o caminho definido no config.yaml.
         """
@@ -198,7 +187,7 @@ class FeatureEngineering:
         pasta_destino = config.get("paths.output_files")
         
         if not pasta_destino:
-            logger.warning("Caminho de output não encontrado no config.yaml. Usando caminho padrão 'files/processed'")
+            self.logger.warning("Caminho de output não encontrado no config.yaml. Usando caminho padrão 'files/processed'")
             pasta_destino = "files/processed"
         
         notebook_path = Path().absolute()  # Caminho atual
@@ -210,25 +199,24 @@ class FeatureEngineering:
         caminho_arquivo = output_path / f"{nome_arquivo}.csv"
         
         df.to_csv(caminho_arquivo, index=False)
-        logger.info(f"Dataset processado salvo em: {caminho_arquivo}")
+        self.logger.info(f"Dataset processado salvo em: {caminho_arquivo}")
 
-    @classmethod
     def criar_todas_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Aplica todas as transformações de feature engineering no dataset.
         """
-        logger.info("Iniciando criação de novas features...")
+        self.logger.info("Iniciando criação de novas features...")
         
         # Criar período do dia
         df = self.criar_periodo_dia(df)
-        logger.info("Feature 'periodo_dia' criada com sucesso")
+        self.logger.info("Feature 'periodo_dia' criada com sucesso")
         
         # Criar gravidade do acidente
         df = self.criar_gravidade_acidente(df)
-        logger.info("Feature 'gravidade_acidente' criada com sucesso")
+        self.logger.info("Feature 'gravidade_acidente' criada com sucesso")
         
         df = self.tratar_causas_acidente(df)
-        logger.info("Feature 'causa_acidente_grupo' criada com sucesso")
+        self.logger.info("Feature 'causa_acidente_grupo' criada com sucesso")
 
 
         # Validação final
@@ -236,9 +224,9 @@ class FeatureEngineering:
         colunas_ausentes = [col for col in novas_colunas if col not in df.columns]
         
         if colunas_ausentes:
-            logger.warning(f"Atenção: As seguintes colunas não foram criadas: {colunas_ausentes}")
+            self.logger.warning(f"Atenção: As seguintes colunas não foram criadas: {colunas_ausentes}")
         else:
-            logger.info("Todas as features foram criadas com sucesso!")
+            self.logger.info("Todas as features foram criadas com sucesso!")
         
         self.salvar_dataset(df, 'datatran_ma_processado')
         
