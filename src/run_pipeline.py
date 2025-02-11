@@ -6,7 +6,7 @@ import logging
 
 from model.non_tree_models import get_non_tree_models
 from model_pipeline import ModelingPipeline, create_tree_based_models
-from pipeline import PreprocessingPipeline
+from preprocessing.pipelines.preprocessing_pipeline import PreprocessingPipeline
 
 
 def parse_args():
@@ -50,6 +50,7 @@ def main():
     
     # Inicializa pipelines
     modeling_pipeline = ModelingPipeline(all_models, output_dir=args.output_dir)
+    
     preprocessing = PreprocessingPipeline(
         collect_new_data=args.collect_new_data,
         dataset_type=args.dataset_type,

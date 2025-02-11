@@ -1,8 +1,7 @@
 import pandas as pd
 import numpy as np
 from scipy.stats import chi2_contingency
-from typing import Dict, List
-
+from typing import Dict
 class CorrelationAnalysis:
     """Analises de correlação entre variaveis"""
 
