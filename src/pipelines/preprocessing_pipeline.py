@@ -36,6 +36,8 @@ class PreprocessingPipeline:
         
         steps = []
         
+        self.logger.info(f"COLLECT NEW DATA: {self.collect_new_data}")
+        
         if self.collect_new_data:
             steps.extend([
                 ('collect_data', DataCollectionTransformer()),
@@ -52,7 +54,6 @@ class PreprocessingPipeline:
         self.pipeline = Pipeline(steps)
         
         self.data_splitter = DataSplit()
-        
         self.data_balancer = DataBalance() if balance_strategy else None
 
     def process_data(
