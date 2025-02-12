@@ -1,6 +1,6 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
-from modules.pre_processing_page import PreprocessingPage
+from dashboard.pre_processing_page import PreprocessingPage
 
 
 preProcessingPage: PreprocessingPage = PreprocessingPage() 

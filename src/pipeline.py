@@ -9,7 +9,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 def main():
-    """Exemplo de uso do pipeline"""
+    """Exemplo de uso do pipeline para o pré processamento"""
     try:
         pipeline = PreprocessingPipeline(
             collect_new_data=True,

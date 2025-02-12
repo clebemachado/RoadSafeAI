@@ -5,9 +5,8 @@ import argparse
 import logging
 
 from model.non_tree_models import get_non_tree_models
-from model_pipeline import ModelingPipeline, create_tree_based_models
-from preprocessing.pipelines.preprocessing_pipeline import PreprocessingPipeline
-
+from pipelines.model_pipeline import ModelingPipeline, create_tree_based_models
+from pipelines.preprocessing_pipeline import PreprocessingPipeline
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Execute pipeline de modelagem')
