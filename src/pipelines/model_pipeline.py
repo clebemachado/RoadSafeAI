@@ -11,8 +11,8 @@ from model.model_result_saver import ModelResultsSaver
 from model.model_trainer import ModelTrainer
 from model.non_tree_model_evaluator import NonTreeModelEvaluator
 from model.non_tree_model_saver import NonTreeResultsSaver
-from pipeline import PreprocessingPipeline
 from model.non_tree_models import get_non_tree_models
+from pipelines.preprocessing_pipeline import PreprocessingPipeline
 
 
 logging.basicConfig(
@@ -273,6 +273,3 @@ def main():
     
     logger.info("\nComparação final dos modelos:")
     logger.info("\n" + str(comparison_df))
-
-if __name__ == "__main__":
-    main()
