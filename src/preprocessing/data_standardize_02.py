@@ -1,6 +1,5 @@
 import pandas as pd
 from config.inject_logger import inject_logger
-
 @inject_logger
 class DataStandardize:
     """

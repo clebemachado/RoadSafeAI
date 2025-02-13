@@ -17,8 +17,20 @@ class ModelResultsSaver:
   
   def __init__(self, output_dir: str = "model_results"):
     self.output_dir = output_dir
-    self.timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    self.run_dir = os.path.join(output_dir, self.timestamp)
+    os.makedirs(self.output_dir, exist_ok=True)  
+    
+    # Mudar a criação da pasta para run_1, run_2
+    existing_runs = [
+        d for d in os.listdir(self.output_dir) 
+        if os.path.isdir(os.path.join(self.output_dir, d)) and d.startswith("run_")
+    ]
+    run_numbers = [
+        int(d.split("_")[1]) for d in existing_runs if d.split("_")[1].isdigit()
+    ]
+    next_run = max(run_numbers) + 1 if run_numbers else 1
+
+    self.run_dir = os.path.join(self.output_dir, f"run_{next_run}")
+    os.makedirs(self.run_dir)
 
   def setup_directories(self, model_names: List[str]) -> None:
     os.makedirs(self.run_dir, exist_ok=True)
@@ -146,12 +158,10 @@ class ModelResultsSaver:
                 **metrics
             })
     
-    # Salva CSV com todas as métricas
     df_comparison = pd.DataFrame(comparison_data)
     csv_path = os.path.join(self.run_dir, 'model_comparison.csv')
     df_comparison.to_csv(csv_path, index=False)
     
-    # Gera e salva gráficos comparativos para cada métrica
     metrics = [col for col in df_comparison.columns 
               if col not in ['model', 'dataset']]
     

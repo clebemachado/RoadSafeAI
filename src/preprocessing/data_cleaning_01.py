@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 from config.inject_logger import inject_logger
 
-
 COLUMNS_TO_DROP = ['id', 'unnamed: 0', 'uf', 'tracado_via', 'feridos','fase_dia']
 
 
@@ -16,7 +15,7 @@ class DataCleaning:
         """
         Aplica todas as etapas de limpeza no dataset na ordem correta.
         """
-        self.logger.info("Iniciando processo de limpeza do dataset...")
+        self.logger.info(f"Iniciando processo de limpeza do dataset... Shape: {df.shape}")
         
         # Remover colunas irrelevantes
         df = self.remove_irrelevant_columns(df)
@@ -44,6 +43,7 @@ class DataCleaning:
         """
         Remove linhas que contêm valores nulos, vazios ou variações de null do dataframe.
         """
+        self.logger.info(f"QUANTIDADE DE LINHAS: {df.shape}")
         df_clean = df.copy()
         
         null_values = ['null', '(null)', 'NULL', '(NULL)', 'NaN', 'nan', 'NAN', 
