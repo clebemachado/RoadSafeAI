@@ -87,6 +87,7 @@ class DataStandardize:
         # Converter data_inversa para datetime
         if 'data_inversa' in df.columns:
             df['data'] = pd.to_datetime(df['data_inversa'])
+            df['ano'] = df['data'].dt.year
             df.drop('data_inversa', axis=1, inplace=True)
             self.logger.info("Coluna data_inversa convertida para datetime e renomeada para 'data'")
         

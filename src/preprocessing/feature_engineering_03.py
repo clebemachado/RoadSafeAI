@@ -1,7 +1,10 @@
 from pathlib import Path
-from config.inject_logger import inject_logger
+
 import pandas as pd
+
 from config.config_project import ConfigProject
+from config.inject_logger import inject_logger
+
 
 @inject_logger
 class FeatureEngineering:
@@ -75,12 +78,12 @@ class FeatureEngineering:
         def classificar_gravidade(row):
             if row['mortos'] > 0:
                 return 'fatal'
-            elif row['feridos_graves'] > 0:
+            elif row['feridos_graves'] > 1 and row['feridos_leves']>= 3:
                 return 'grave'
-            elif row['feridos_leves'] > 0:
-                return 'leve'
+            elif row['feridos_leves'] > 0 and row['feridos_graves'] == 1:
+                return 'moderado'
             else:
-                return 'sem_vitimas'
+                return 'leve'
         
         df['gravidade_acidente'] = df.apply(classificar_gravidade, axis=1)
         

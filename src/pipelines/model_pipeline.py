@@ -1,6 +1,6 @@
 # model_pipeline.py
 import logging
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -25,7 +25,7 @@ class ModelingPipeline:
     """Classe principal para gerenciar o pipeline de modelagem"""
     
     def __init__(self, models: List[Tuple[str, BaseEstimator]], 
-                 output_dir: str = "resultados"):
+                 output_dir: str = "model_results"):
         """
         Inicializa o pipeline de modelagem
         
@@ -190,7 +190,10 @@ class ModelingPipeline:
 
 def create_tree_based_models(
     random_state: int = 42,
-    n_estimators: int = 100
+    n_estimators: int = 100,
+    dt_params: Optional[Dict] = None,
+    rf_params: Optional[Dict] = None,
+    cb_params: Optional[Dict] = None
 ) -> List[Tuple[str, BaseEstimator]]:
     """
     Cria uma lista de modelos baseados em árvore de decisão
@@ -199,36 +202,41 @@ def create_tree_based_models(
     from sklearn.tree import DecisionTreeClassifier
     from catboost import CatBoostClassifier
 
+    dt_default_params = {
+        'random_state': random_state,
+        'class_weight': 'balanced'
+    }
+    if dt_params:
+        dt_default_params.update(dt_params)
     
+    rf_default_params = {
+        'n_estimators': n_estimators,
+        'random_state': random_state,
+        'class_weight': 'balanced',
+        'n_jobs': -1
+    }
+    if rf_params:
+        rf_default_params.update(rf_params)
+    
+    cb_default_params = {
+        'iterations': n_estimators,
+        'random_seed': random_state,
+        'verbose': False,
+        'learning_rate': 0.1,
+        'depth': 6,
+        'l2_leaf_reg': 3,
+        'thread_count': -1
+    }
+    if cb_params:
+        if 'random_state' in cb_params:
+            cb_params['random_seed'] = cb_params.pop('random_state')
+        cb_default_params.update(cb_params)
+    
+    # Create and return the list of models
     models = [
-        (
-            'Decision Tree',
-            DecisionTreeClassifier(
-                random_state=random_state,
-                class_weight='balanced'
-            )
-        ),
-        (
-            'Random Forest',
-            RandomForestClassifier(
-                n_estimators=n_estimators,
-                random_state=random_state,
-                class_weight='balanced',
-                n_jobs=-1
-            )
-        ),
-        (
-            'CatBoost',
-            CatBoostClassifier(
-                iterations=n_estimators,
-                random_seed=random_state,
-                verbose=False,
-                learning_rate=0.1,
-                depth=6,
-                l2_leaf_reg=3,
-                thread_count=-1
-            )
-        )
+        ('Decision Tree', DecisionTreeClassifier(**dt_default_params)),
+        ('Random Forest', RandomForestClassifier(**rf_default_params)),
+        ('CatBoost', CatBoostClassifier(**cb_default_params))
     ]
     
     return models
@@ -236,17 +244,10 @@ def create_tree_based_models(
 def main():
     """Exemplo de como usar o pipeline de modelagem com todos os modelos"""
 
-    # Cria os modelos baseados em árvore
-    tree_models = create_tree_based_models(random_state=42, n_estimators=100)
-    
-    # Obtém os modelos não baseados em árvore
-    non_tree_models = get_non_tree_models(random_state=42)
-    
-    # Combina todos os modelos
-    all_models = tree_models + non_tree_models
+    modelos = create_tree_based_models(random_state=42, n_estimators=100)
     
     # Inicializa o pipeline
-    pipeline = ModelingPipeline(all_models)
+    pipeline = ModelingPipeline(modelos)
     
     # Inicializa o pipeline de pré-processamento
     preprocessing = PreprocessingPipeline(

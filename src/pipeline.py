@@ -1,6 +1,6 @@
 import logging
-from preprocessing.pipelines.preprocessing_pipeline import PreprocessingPipeline
 
+from pipelines.preprocessing_pipeline import PreprocessingPipeline
 
 logging.basicConfig(
     level=logging.INFO,
