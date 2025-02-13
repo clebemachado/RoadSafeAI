@@ -25,7 +25,7 @@ class ModelingPipeline:
     """Classe principal para gerenciar o pipeline de modelagem"""
     
     def __init__(self, models: List[Tuple[str, BaseEstimator]], 
-                 output_dir: str = "model_results"):
+                 output_dir: str = "resultados"):
         """
         Inicializa o pipeline de modelagem
         

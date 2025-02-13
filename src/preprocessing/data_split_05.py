@@ -5,7 +5,6 @@ from typing import Tuple
 from config.inject_logger import inject_logger
 
 
-
 @inject_logger
 class DataSplit:
     """
@@ -146,7 +145,6 @@ class DataSplit:
         )
         
         self.logger.info("Preparação dos dados concluída!")
-        
         return X_train, X_valid, X_test, y_train, y_valid, y_test
 
 # Exemplo de uso:

@@ -1,7 +1,6 @@
 from pathlib import Path
 from config.inject_logger import inject_logger
 import pandas as pd
-
 from config.config_project import ConfigProject
 
 @inject_logger
@@ -229,5 +228,4 @@ class FeatureEngineering:
             self.logger.info("Todas as features foram criadas com sucesso!")
         
         self.salvar_dataset(df, 'datatran_ma_processado')
-        
         return df

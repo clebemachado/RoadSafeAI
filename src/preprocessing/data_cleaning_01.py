@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 from config.inject_logger import inject_logger
 
-
 COLUMNS_TO_DROP = ['id', 'unnamed: 0', 'uf', 'tracado_via', 'feridos','fase_dia']
 
 

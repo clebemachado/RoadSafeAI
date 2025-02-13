@@ -1,6 +1,4 @@
-import logging
 from typing import Dict, List, Tuple
-
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder, TargetEncoder
