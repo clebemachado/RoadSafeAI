@@ -3,10 +3,6 @@
 🔍 **Descrição:**
 Projeto que coleta, pré-processa e analisa um conjunto de dados de acidentes de carro no estado do Maranhão entre 2007 e 2024 para identificar fatores que contribuem para acidentes, como clima, trânsito e condições das estradas do estado.
 
-**Como executar ?**
-- Utilize o notebook run_pipeline.ipynb presente na pasta notebooks/main para executar todos o pipeline de pré-processamento.
-- Os arquivos EDA_inicial.ipynb e EDA_justificativas_e_graficos.ipynb, contem as análises exploratórias realizadas.
-
 ---
 
 ## 📌 Reconhecimentos e Direitos Autorais
@@ -39,7 +35,7 @@ Este projeto está licenciado sob os termos da **Licença MIT**.
 
 🔗 **Para mais informações sobre a Licença MIT:** [MIT License](https://opensource.org/licenses/MIT)
 
-## :computer: Execução
+## :computer: **Como executar ?**
 .sh - Pode ser executado com o otmizado optuna
 ```
 pipeline.sh
