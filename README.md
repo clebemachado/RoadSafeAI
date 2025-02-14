@@ -15,6 +15,22 @@ Projeto que coleta, pré-processa e analisa um conjunto de dados de acidentes de
 
 ---
 
+## :computer: **Como executar ?**
+.sh - Pode ser executado com o otmizado optuna
+```
+pipeline.sh
+```
+.bat - está sem o otmizador optuna
+```
+pipeline.bat
+```
+StreamLit - está sem o otmizador optuna
+```
+pipeline_streamlit.bat
+```
+
+---
+
 ## 🛡️ Copyright & Licença
 
 Este material é resultado de um trabalho acadêmico para a disciplina **"MINERAÇÃO DE DADOS E APLICAÇÕES NA ENGENHARIA"**, sob a orientação do professor **Dr. Thales Levi Azevedo Valente**, semestre letivo **2024.2**, curso **Engenharia da Computação**, na **Universidade Federal do Maranhão (UFMA)**.
@@ -34,18 +50,3 @@ Este projeto está licenciado sob os termos da **Licença MIT**.
  O SOFTWARE É FORNECIDO "COMO ESTÁ", SEM GARANTIA DE QUALQUER TIPO, EXPRESSA OU IMPLÍCITA, INCLUINDO MAS NÃO SE LIMITANDO ÀS GARANTIAS DE COMERCIALIZAÇÃO, ADEQUAÇÃO A UM DETERMINADO FIM E NÃO INFRINGÊNCIA. EM NENHUM CASO OS AUTORES OU DETENTORES DE DIREITOS AUTORAIS SERÃO RESPONSÁVEIS POR QUALQUER RECLAMAÇÃO, DANOS OU OUTRA RESPONSABILIDADE, SEJA EM AÇÃO DE CONTRATO, TORT OU OUTRA FORMA, DECORRENTE DE, FORA DE OU EM CONEXÃO COM O SOFTWARE OU O USO OU OUTRAS NEGOCIAÇÕES NO SOFTWARE.
 
 🔗 **Para mais informações sobre a Licença MIT:** [MIT License](https://opensource.org/licenses/MIT)
-
-## :computer: **Como executar ?**
-.sh - Pode ser executado com o otmizado optuna
-```
-pipeline.sh
-```
-.bat - está sem o otmizador optuna
-```
-pipeline.bat
-```
-StreamLit - está sem o otmizador optuna
-```
-pipeline_streamlit.bat
-```
-
