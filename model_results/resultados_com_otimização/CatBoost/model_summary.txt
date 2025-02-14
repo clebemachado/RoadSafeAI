@@ -1,0 +1,41 @@
+Model: CatBoost
+==================================================
+
+Model Parameters:
+--------------------
+iterations: 300
+learning_rate: 0.26010153052067403
+depth: 10
+l2_leaf_reg: 0.04672076254103927
+border_count: 89
+random_seed: 42
+verbose: False
+
+Train Metrics:
+--------------------
+accuracy: 1.0000
+precision: 1.0000
+recall: 1.0000
+f1: 1.0000
+roc_auc: 1.0000
+
+Valid Metrics:
+--------------------
+accuracy: 0.9420
+precision: 0.9384
+recall: 0.9420
+f1: 0.9399
+roc_auc: 0.9818
+
+Test Metrics:
+--------------------
+accuracy: 0.9457
+precision: 0.9426
+recall: 0.9457
+f1: 0.9439
+roc_auc: 0.9834
+
+Cross-validation Results:
+--------------------
+Mean: 0.9527
+Std: 0.0395
