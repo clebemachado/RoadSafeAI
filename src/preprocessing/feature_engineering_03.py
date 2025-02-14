@@ -54,18 +54,6 @@ class FeatureEngineering:
     def criar_gravidade_acidente(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Cria a variável gravidade_acidente baseada no número de vítimas.
-        
-        Categorias:
-        - Sem_vitimas: apenas ilesos
-        - Leve: apenas feridos leves
-        - Grave: presença de feridos graves
-        - Fatal: presença de mortos
-        
-        Args:
-            df: DataFrame com as colunas 'ilesos', 'feridos_leves', 'feridos_graves', 'mortos'
-            
-        Returns:
-            DataFrame com a nova coluna 'gravidade_acidente'
         """
         df = df.copy()
         
@@ -78,9 +66,9 @@ class FeatureEngineering:
         def classificar_gravidade(row):
             if row['mortos'] > 0:
                 return 'fatal'
-            elif row['feridos_graves'] > 1 and row['feridos_leves']>= 3:
+            elif row['feridos_graves'] > 1 or row['feridos_leves']>= 3:
                 return 'grave'
-            elif row['feridos_leves'] > 0 and row['feridos_graves'] == 1:
+            elif row['feridos_leves'] > 0 or row['feridos_graves'] == 1:
                 return 'moderado'
             else:
                 return 'leve'

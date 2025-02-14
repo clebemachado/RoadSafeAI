@@ -1,7 +1,9 @@
 from typing import Dict, List, Tuple
+
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder, TargetEncoder
+
 from config.inject_logger import inject_logger
 
 

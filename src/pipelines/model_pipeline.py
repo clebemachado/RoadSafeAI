@@ -9,11 +9,7 @@ from sklearn.base import BaseEstimator
 from model.model_comparison_helper import ModelComparisonHelper
 from model.model_result_saver import ModelResultsSaver
 from model.model_trainer import ModelTrainer
-from model.non_tree_model_evaluator import NonTreeModelEvaluator
-from model.non_tree_model_saver import NonTreeResultsSaver
-from model.non_tree_models import get_non_tree_models
 from pipelines.preprocessing_pipeline import PreprocessingPipeline
-
 
 logging.basicConfig(
     level=logging.INFO,
@@ -36,8 +32,6 @@ class ModelingPipeline:
         self.trainers = [ModelTrainer(model, name) for name, model in models]
         self.results = {}
         self.results_saver = ModelResultsSaver(output_dir)
-        self.non_tree_evaluator = NonTreeModelEvaluator()
-        self.non_tree_saver = NonTreeResultsSaver(output_dir)
         self.comparison_helper = ModelComparisonHelper()
         self.results_saver.setup_directories([t.name for t in self.trainers])
         
@@ -95,16 +89,6 @@ class ModelingPipeline:
                 )
                 model_results['non_tree_metrics'] = non_tree_metrics
                 
-                # Salva métricas e plots específicos
-                self.non_tree_saver.save_metrics(non_tree_metrics, trainer.name)
-                self.non_tree_saver.save_plots(
-                    trainer.name,
-                    self.non_tree_evaluator,
-                    y_test,
-                    y_pred,
-                    y_prob,
-                    classes
-                )
             # Processamento para modelos baseados em árvore
             else:
                 # Salva métricas gerais
@@ -162,7 +146,6 @@ class ModelingPipeline:
         )
         
         # Salva comparação final
-        self.non_tree_saver.save_model_comparison(self.results)
         self.results_saver.save_comparison_results(
             self.results,
             self.compare_models
@@ -198,9 +181,9 @@ def create_tree_based_models(
     """
     Cria uma lista de modelos baseados em árvore de decisão
     """
+    from catboost import CatBoostClassifier
     from sklearn.ensemble import RandomForestClassifier
     from sklearn.tree import DecisionTreeClassifier
-    from catboost import CatBoostClassifier
 
     dt_default_params = {
         'random_state': random_state,

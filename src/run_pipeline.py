@@ -9,7 +9,6 @@ import pandas as pd
 
 from eda.exploratory_analysis import AnaliseExploratoria
 from lab.hiperparameter_optimization import ModelOptimizer
-from model.non_tree_models import get_non_tree_models
 from pipelines.model_pipeline import ModelingPipeline, create_tree_based_models
 from pipelines.preprocessing_pipeline import PreprocessingPipeline
 
@@ -55,8 +54,7 @@ def main():
         random_state=args.random_state,
         n_estimators=args.n_estimators
     )
-    non_tree_models = get_non_tree_models(random_state=args.random_state)
-    all_models = tree_models + non_tree_models
+    all_models = tree_models
     
     # Inicializa pipelines
     modeling_pipeline = ModelingPipeline(all_models, output_dir=args.output_dir)
