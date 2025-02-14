@@ -7,7 +7,7 @@ from PIL import Image
 class ReportPage:
     def render(self):
         # Caminho da pasta 'resultados'
-        results_path = Path("./resultados")  # Ajuste conforme necessário
+        results_path = Path("./model_results")  # Ajuste conforme necessário
         
         subfolders = [f.name for f in results_path.iterdir() if f.is_dir() and f.name != "non_tree_models"]
 

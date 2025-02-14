@@ -20,7 +20,7 @@ REM Executa o pipeline
 python src\run_pipeline.py ^
     --random-state 42 ^
     --n-estimators 100 ^
-    --output-dir "resultados" ^
+    --output-dir "model_results" ^
     --test-size 0.2 ^
     --valid-size 0.2 ^
     --balance smote ^

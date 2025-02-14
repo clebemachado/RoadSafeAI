@@ -56,7 +56,7 @@ fi
 CMD="python src\\run_pipeline.py"
 CMD+=" --random-state 42"
 CMD+=" --n-estimators 100"
-CMD+=" --output-dir resultados"
+CMD+=" --output-dir model_results"
 CMD+=" --test-size 0.2"
 CMD+=" --valid-size 0.2"
 CMD+=" --balance smote"
