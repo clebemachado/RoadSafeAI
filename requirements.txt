@@ -42,3 +42,6 @@ lxml==5.3.0
 #StreamLit
 streamlit==1.42.0
 streamlit-option-menu==0.4.0
+
+#optuna
+optuna

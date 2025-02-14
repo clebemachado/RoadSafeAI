@@ -10,12 +10,9 @@ reportPage: ReportPage = ReportPage()
 def main():
     
     menuOptions = option_menu(
-        "RoadMapAI", ["EDA", "Preparation", "Training", 'Reports',], 
+        "RoadMapAI", ["Preparation", "Training", 'Reports',], 
          default_index=0, orientation="horizontal"
     )
-    
-    if menuOptions == "Exploration":
-        homePage.render()
         
     if menuOptions == "Preparation":
         preProcessingPage.render()
