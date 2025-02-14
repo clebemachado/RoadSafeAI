@@ -17,3 +17,10 @@ class FeatureEngineering:
     def get_data(self):
         """Retorna o DataFrame com novas features."""
         return self.df
+    def create_features(df):
+        """ Gera novas features derivadas """
+        
+        df['hora_do_dia'] = pd.to_datetime(df['data_inversa']).dt.hour
+        df['dia_da_semana'] = pd.to_datetime(df['data_inversa']).dt.day_name()
+        
+        return df
