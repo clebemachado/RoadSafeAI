@@ -16,6 +16,9 @@ Projeto que coleta, pré-processa e analisa um conjunto de dados de acidentes de
 ---
 
 ## :computer: **Como executar ?**
+
+Execução por Linha de Comando:
+
 .sh - Pode ser executado com o otmizado optuna
 ```
 pipeline.sh
@@ -24,6 +27,8 @@ pipeline.sh
 ```
 pipeline.bat
 ```
+Execução por Interface Grafica
+
 StreamLit - está sem o otmizador optuna
 ```
 pipeline_streamlit.bat
