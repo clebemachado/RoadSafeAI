@@ -20,6 +20,7 @@ Projeto que coleta, pré-processa e analisa um conjunto de dados de acidentes de
 **Execução via Python Notebook:**
 
 Acessar o seguinte caminho no projeto: notebooks\main\executar_pipeline.ipynb
+
 Esse python notebook contem a execução de todo o pipeline. 
 
 
